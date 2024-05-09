@@ -1,5 +1,6 @@
 import random
 import json
+import warnings  # Import warnings module
 from groq import Groq
 from langchain.chains import LLMChain
 from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder
@@ -52,8 +53,13 @@ def main():
 
     while True:
         user_input = input("You: ")
-        prompt = construct_prompt(CONTEXT_PROMPT, user_input)
-        conversation = LLMChain(llm=groq_chat, prompt=prompt, verbose=False, memory=memory)
+        
+        # Suppress deprecation warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            
+            prompt = construct_prompt(CONTEXT_PROMPT, user_input)
+            conversation = LLMChain(llm=groq_chat, prompt=prompt, verbose=False, memory=memory)
 
         response = conversation.predict(human_input=user_input)
         print("\nLyla:", response, "\n")
