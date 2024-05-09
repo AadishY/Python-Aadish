@@ -2,6 +2,7 @@ import json
 import warnings
 import pickle
 import random
+import logging
 from groq import Groq
 from langchain.chains import LLMChain
 from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder
@@ -21,7 +22,7 @@ MEMORY_SIZE = 10
 MEMORY_FILE = "conversation_memory.pkl"  # File to store conversation memory
 CUSTOM_DATA = {"favorite_color": "blue",
                "hometown": "Springfield",
-               #Add more info
+               # Add more info
                }
 
 def choose_model():
@@ -39,8 +40,13 @@ def initialize_memory():
     return memory
 
 def save_memory(memory):
-    with open(MEMORY_FILE, "wb") as file:
-        pickle.dump(memory, file)
+    try:
+        with open(MEMORY_FILE, "wb") as file:
+            pickle.dump(memory, file)
+    except Exception as e:
+        logging.error(f"Error occurred while saving memory: {e}")
+    finally:
+        logging.info("Memory saved successfully.")
 
 def construct_prompt(context_prompt, user_input, temperature, max_tokens):
     return ChatPromptTemplate.from_messages([
@@ -71,4 +77,5 @@ def main():
         save_memory(memory)
 
 if __name__ == "__main__":
+    logging.basicConfig(filename='conversation_memory.log', level=logging.INFO)
     main()
