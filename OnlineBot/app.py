@@ -90,6 +90,8 @@ def apply_custom_css():
     <style>
     [data-testid="stToolbar"] {visibility: hidden !important;}
     footer {visibility: hidden !important;}
+    .viewerBadge_container__1QSob {visibility: hidden;} /* Hide the Streamlit "Hosted with" label */
+    .viewerBadge_link__1S137 {visibility: hidden;} /* Hide the Streamlit crown icon */
     </style>
     """
     
