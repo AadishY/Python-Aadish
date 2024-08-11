@@ -37,8 +37,13 @@ def initialize_conversation(groq_chat, memory):
 
 # Clean response to remove any unintended HTML
 def clean_response(response_text):
-    # Use regex to remove any HTML tags like </div>
-    clean_text = re.sub(r'</?[^>]+>', '', response_text)
+    # Escape HTML characters to prevent raw HTML from being displayed
+    clean_text = (
+        response_text.replace('&', '&amp;')
+        .replace('<', '&lt;')
+        .replace('>', '&gt;')
+        .replace('\n', '<br>')  # Handle newlines
+    )
     return clean_text
 
 # Process the user’s question and generate a response
@@ -63,12 +68,6 @@ def display_chat_history():
 
 # Display a single message
 def display_message(text, sender, color, right_align):
-    # Escape any HTML characters in the message text to avoid rendering raw HTML
-    escaped_text = (
-        text.replace('&', '&amp;')
-            .replace('<', '&lt;')
-            .replace('>', '&gt;')
-    )
     alignment = 'right' if right_align else 'left'
     justify_content = 'flex-end' if right_align else 'flex-start'
     
@@ -77,7 +76,7 @@ def display_message(text, sender, color, right_align):
     <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
         <div style='background-color: {color}; padding: 15px; border-radius: 15px; color: white; text-align: {alignment};
         box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); max-width: 70%; word-wrap: break-word;'>
-            <b>{sender}:</b><br>{escaped_text}
+            <b>{sender}:</b><br>{text}
         </div>
     </div>
     """
