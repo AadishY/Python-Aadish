@@ -65,12 +65,12 @@ def display_chat_history():
             display_message(message['human'], "You", "#007bff", right_align=True)
             display_message(message['AI'], "Aadish", "#28a745", right_align=False)
 
-# Display a single message
 def display_message(text, sender, color, right_align):
     if sender == "Aadish":
-        # Display the bot's response as code in a distinct block
-        st.markdown(f"```python\n{text}\n```", unsafe_allow_html=True)
+        # Display the bot's response as a code block
+        st.code(text, language="python")
     else:
+        # Display user messages with custom HTML styling
         alignment = 'right' if right_align else 'left'
         justify_content = 'flex-end' if right_align else 'flex-start'
         
@@ -84,6 +84,7 @@ def display_message(text, sender, color, right_align):
         """
         
         st.markdown(message_html, unsafe_allow_html=True)
+
 
 
 
