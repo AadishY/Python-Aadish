@@ -38,9 +38,11 @@ def initialize_conversation(groq_chat, memory):
 def process_user_question(user_question, conversation):
     try:
         response = conversation(user_question)
-        message = {'human': user_question, 'AI': response['response']}
+        # Sanitize the response to ensure no unintended HTML is passed
+        clean_response = response['response'].replace('</div>', '')
+        message = {'human': user_question, 'AI': clean_response}
         st.session_state.chat_history.append(message)
-        return response['response']
+        return clean_response
     except Exception as e:
         st.error(f"Error processing question: {e}")
         return "Sorry, something went wrong."
@@ -56,7 +58,11 @@ def display_chat_history():
 # Display a single message
 def display_message(text, sender, color, right_align):
     # Escape any HTML characters in the message text to avoid rendering raw HTML
-    escaped_text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+    escaped_text = (
+        text.replace('&', '&amp;')
+            .replace('<', '&lt;')
+            .replace('>', '&gt;')
+    )
     alignment = 'right' if right_align else 'left'
     justify_content = 'flex-end' if right_align else 'flex-start'
     
