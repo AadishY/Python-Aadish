@@ -34,7 +34,7 @@ def initialize_conversation(groq_chat, memory):
         return None
     return ConversationChain(llm=groq_chat, memory=memory)
 
-# Clean response to remove any unintended HTML for non-code responses
+# Clean response to remove any unintended HTML
 def clean_response(response_text):
     clean_text = (
         response_text.replace('&', '&amp;')
@@ -75,12 +75,12 @@ def display_chat_history():
             display_message(message['AI'], "Aadish", "#28a745", right_align=False)
 
 def display_message(text, sender, color, right_align):
-    if sender == "Aadish":
-        if is_code_block(text):
-            # Display code block if it contains code markers
-            code_content = extract_code_content(text)
-            st.code(code_content, language="python")
-        else:
+    if is_code_block(text):
+        # Display code block if it contains code markers
+        code_content = extract_code_content(text)
+        st.code(code_content, language="python")
+    else:
+        if sender == "Aadish":
             # Display as normal message with HTML styling
             alignment = 'right' if right_align else 'left'
             justify_content = 'flex-end' if right_align else 'flex-start'
@@ -97,23 +97,23 @@ def display_message(text, sender, color, right_align):
             """
             
             st.markdown(message_html, unsafe_allow_html=True)
-    else:
-        # Display user messages with custom HTML styling
-        alignment = 'right' if right_align else 'left'
-        justify_content = 'flex-end' if right_align else 'flex-start'
-        
-        clean_text = clean_response(text).replace('<br>', '\n')
-        
-        message_html = f"""
-        <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
-            <div style='background-color: {color}; padding: 15px; border-radius: 15px; color: white; text-align: {alignment};
-            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); max-width: 70%; word-wrap: break-word;'>
-                <b>{sender}:</b><br>{clean_text}
+        else:
+            # Display user messages with custom HTML styling
+            alignment = 'right' if right_align else 'left'
+            justify_content = 'flex-end' if right_align else 'flex-start'
+            
+            clean_text = clean_response(text).replace('<br>', '\n')
+            
+            message_html = f"""
+            <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
+                <div style='background-color: {color}; padding: 15px; border-radius: 15px; color: white; text-align: {alignment};
+                box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); max-width: 70%; word-wrap: break-word;'>
+                    <b>{sender}:</b><br>{clean_text}
+                </div>
             </div>
-        </div>
-        """
-        
-        st.markdown(message_html, unsafe_allow_html=True)
+            """
+            
+            st.markdown(message_html, unsafe_allow_html=True)
 
 # Apply custom CSS for background image, hiding Streamlit UI elements, and custom styling
 def apply_custom_css():
