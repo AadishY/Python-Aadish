@@ -1,9 +1,10 @@
 import os
 import streamlit as st
+from dotenv import load_dotenv
 from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
-
+load_dotenv()
 MODEL_NAME = "gemma2-9b-it"
 MEMORY_LENGTH = 5
 
