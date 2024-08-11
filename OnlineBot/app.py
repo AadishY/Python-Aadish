@@ -123,9 +123,14 @@ def apply_custom_css():
     st.markdown(hide_streamlit_style, unsafe_allow_html=True)
     st.markdown(background_css, unsafe_allow_html=True)
 
+    # Add meta description
+    st.markdown("""
+    <meta name="description" content="Chat with Aadish GPT for an engaging conversation experience.">
+    """, unsafe_allow_html=True)
+
 # Main application logic
 def main():
-    st.set_page_config(page_title="Aadish GPT", page_icon="🤖", page_description="Chat with Aadish GPT for an engaging conversation experience.")  # Set the page title, icon, and description
+    st.set_page_config(page_title="Aadish GPT", page_icon="🤖")  # Set the page title and icon
     apply_custom_css()
     initialize_session_state()
 
