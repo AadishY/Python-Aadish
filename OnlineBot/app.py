@@ -54,7 +54,7 @@ def display_chat_history():
     chat_display = st.container()
     with chat_display:
         for message in st.session_state.chat_history:
-            display_message(message['human'], st.session_state.selected_profile, "#007bff", right_align=True)
+            display_message(message['human'], "You", "#007bff", right_align=True)
             display_message(message['AI'], "Aadish", "#28a745", right_align=False)
 
 # Display a single message
@@ -81,12 +81,11 @@ def main():
     selected_profile = st.sidebar.selectbox("Who is talking?", PROFILES, index=PROFILES.index("Anonymous"))
     st.session_state.selected_profile = selected_profile
 
-    # Display profile name at the top
-    st.title(f"Chat with {st.session_state.selected_profile} 🤖")
-    
-    initialize_session_state()
+    # Display profile name and title
+    st.title("Aadish GPT")
+    st.write(f"**Profile:** {st.session_state.selected_profile}")
 
-    st.markdown("Chat with Aadish!")
+    initialize_session_state()
 
     if st.button("Clear Chat"):
         st.session_state.chat_history = []
@@ -104,7 +103,7 @@ def main():
 
     user_question = st.chat_input("What is up?")
     if user_question:
-        display_message(user_question, st.session_state.selected_profile, "#007bff", right_align=True)
+        display_message(user_question, "You", "#007bff", right_align=True)
         with st.spinner("Aadish is typing..."):
             response = process_user_question(user_question, conversation)
         display_message(response, "Aadish", "#28a745", right_align=False)
