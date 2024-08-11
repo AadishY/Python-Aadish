@@ -1,18 +1,31 @@
 import os
+import json
 import streamlit as st
 from dotenv import load_dotenv
 from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
+
 load_dotenv()
 MODEL_NAME = "gemma2-9b-it"
 MEMORY_LENGTH = 5
+CACHE_FILE = "chat_history_cache.json"
 
 def initialize_session_state():
     if 'chat_history' not in st.session_state:
-        st.session_state.chat_history = []
+        st.session_state.chat_history = load_chat_history()
     if 'memory' not in st.session_state:
         st.session_state.memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
+
+def load_chat_history():
+    if os.path.exists(CACHE_FILE):
+        with open(CACHE_FILE, 'r') as file:
+            return json.load(file)
+    return []
+
+def save_chat_history():
+    with open(CACHE_FILE, 'w') as file:
+        json.dump(st.session_state.chat_history, file)
 
 def initialize_groq_chat():
     groq_api_key = os.getenv("GROQ_API_KEY")
@@ -36,6 +49,7 @@ def process_user_question(user_question, conversation):
     response = conversation(user_question)
     message = {'human': user_question, 'AI': response['response']}
     st.session_state.chat_history.append(message)
+    save_chat_history()
     return response['response']
 
 def main():
@@ -46,6 +60,7 @@ def main():
 
     if st.button("Clear Chat"):
         st.session_state.chat_history = []
+        save_chat_history()
 
     groq_chat = initialize_groq_chat()
     if groq_chat is None:
