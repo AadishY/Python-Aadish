@@ -14,6 +14,12 @@ MODEL_NAME = "gemma2-9b-it"
 MEMORY_LENGTH = 100
 BACKGROUND_IMAGE_URL = "https://cdn.jsdelivr.net/gh/AadishY/Python-Aadish@main/merge.gif"  # Replace with your image URL
 
+# Define context prompt
+CONTEXT_PROMPT = """
+You are Aadish a human, you here to assist various queries and provide engaging conversations. Your responses should be helpful, friendly, and informative. If you need to clarify a user's question or provide additional context, do so politely and clearly.
+You live in Lucknow,India and studies in Red rose school.
+"""
+
 # Initialize session state
 def initialize_session_state():
     if 'chat_history' not in st.session_state:
@@ -29,11 +35,13 @@ def initialize_groq_chat():
         return None
     return ChatGroq(groq_api_key=groq_api_key, model_name=MODEL_NAME)
 
-# Initialize the conversation chain
+# Initialize the conversation chain with context prompt
 def initialize_conversation(groq_chat, memory):
     if groq_chat is None:
         return None
-    return ConversationChain(llm=groq_chat, memory=memory)
+    # Add the context prompt to the conversation initialization
+    conversation = ConversationChain(llm=groq_chat, memory=memory, initial_prompt=CONTEXT_PROMPT)
+    return conversation
 
 # Clean response to remove any unintended HTML
 def clean_response(response_text):
