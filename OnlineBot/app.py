@@ -5,14 +5,16 @@ from dotenv import load_dotenv
 from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
+import time
 
 # Load environment variables
 load_dotenv()
 
 # Constants
 MODEL_NAME = "gemma2-9b-it"
-MEMORY_LENGTH = 5
+MEMORY_LENGTH = 10
 CACHE_FILE = "chat_history_cache.json"
+GIF_URL = "https://media1.tenor.com/m/V_0ti1a3_GoAAAAC/loading-azurlane.gif"  # Replace with your desired GIF URL
 
 # Initialize session state
 def initialize_session_state():
@@ -98,8 +100,26 @@ def display_message(text, sender, color, right_align):
         """, unsafe_allow_html=True
     )
 
+# Display the loading GIF
+def show_loading_gif():
+    st.markdown(
+        f"""
+        <div style='display: flex; justify-content: center; align-items: center; height: 100vh;'>
+            <img src="{GIF_URL}" alt="Loading..." style="max-width: 100%; height: auto;"/>
+        </div>
+        """, unsafe_allow_html=True
+    )
+
 # Main application logic
 def main():
+    # Show loading screen initially
+    show_loading_gif()
+    # Delay to simulate loading time
+    time.sleep(3)  # Adjust the sleep time as needed
+
+    # Remove loading screen and show the actual app content
+    st.experimental_rerun()
+
     initialize_session_state()
 
     st.title("Aadish GPT 🤖")
