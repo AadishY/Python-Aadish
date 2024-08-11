@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
+import re
 
 # Load environment variables
 load_dotenv()
@@ -34,15 +35,20 @@ def initialize_conversation(groq_chat, memory):
         return None
     return ConversationChain(llm=groq_chat, memory=memory)
 
+# Clean response to remove any unintended HTML
+def clean_response(response_text):
+    # Use regex to remove any HTML tags like </div>
+    clean_text = re.sub(r'</?[^>]+>', '', response_text)
+    return clean_text
+
 # Process the user’s question and generate a response
 def process_user_question(user_question, conversation):
     try:
         response = conversation(user_question)
-        # Sanitize the response to ensure no unintended HTML is passed
-        clean_response = response['response'].replace('</div>', '')
-        message = {'human': user_question, 'AI': clean_response}
+        clean_response_text = clean_response(response['response'])
+        message = {'human': user_question, 'AI': clean_response_text}
         st.session_state.chat_history.append(message)
-        return clean_response
+        return clean_response_text
     except Exception as e:
         st.error(f"Error processing question: {e}")
         return "Sorry, something went wrong."
