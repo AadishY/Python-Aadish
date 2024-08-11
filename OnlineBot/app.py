@@ -22,7 +22,7 @@ PROFILE_DATA = {
     "Aditya": {"likes": "gaming", "bio": "Like playing darksouls games like elden ring.He always get killed first in video games.They both are in same school and class. "},
     "Anmol": {"likes": "", "bio": "They both are in same school and class"},
     "Prakhar": {"likes": "gaming", "bio": "They both are in same school and class"},
-    "Priyanshu": {"likes": "Studing", "bio": "A firend of the bot.They both are in same school and class"."},
+    "Priyanshu": {"likes": "Studing", "bio": "A firend of the bot.They both are in same school and class"},
     "Yuvraj": {"likes": "playing sports", "bio": "Class mate of Aadish (the bot) and a good friend. They both are in same school and class"},
     "Anonymous": {""}
 }
@@ -106,7 +106,7 @@ def main():
     st.session_state.selected_profile = selected_profile
 
     # Display profile name and title
-    st.title("Aadish GPT")
+    st.title("Aadish GPT 🤖")
     st.write(f"**Profile:** {st.session_state.selected_profile}")
 
     # Display profile custom data
