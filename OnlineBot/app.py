@@ -32,18 +32,11 @@ def load_memory():
     if os.path.exists(MEMORY_FILE):
         with open(MEMORY_FILE, 'r') as file:
             memory_data = json.load(file)
-            return ConversationBufferWindowMemory(
-                k=MEMORY_LENGTH, 
-                memory_variables=memory_data['memory_variables'],
-                messages=memory_data['messages']
-            )
+            return ConversationBufferWindowMemory(k=MEMORY_LENGTH, chat_memory=memory_data['chat_memory'])
     return ConversationBufferWindowMemory(k=MEMORY_LENGTH)
 
 def save_memory():
-    memory_data = {
-        'memory_variables': st.session_state.memory.memory_variables,
-        'messages': st.session_state.memory.messages
-    }
+    memory_data = st.session_state.memory.load_memory_variables({})
     with open(MEMORY_FILE, 'w') as file:
         json.dump(memory_data, file)
 
