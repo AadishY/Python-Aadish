@@ -70,15 +70,38 @@ def display_message(text, sender, color, right_align):
     alignment = 'right' if right_align else 'left'
     justify_content = 'flex-end' if right_align else 'flex-start'
     
-    message_html = f"""
-    <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
-        <div style='background-color: {color}; padding: 15px; border-radius: 15px; color: white; text-align: {alignment};
-        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); max-width: 70%; word-wrap: break-word;'>
-            <b>{sender}:</b><br>{text}
-        </div>
-    </div>
-    """
+    # Detect code blocks using triple backticks
+    code_block_pattern = r'```(.*?)```'
+    is_code_block = re.search(code_block_pattern, text, re.DOTALL)
     
+    if is_code_block:
+        # Extract code content
+        code_content = re.sub(code_block_pattern, r'\1', text, flags=re.DOTALL).strip()
+        
+        # HTML for code block
+        message_html = f"""
+        <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
+            <div style='background-color: {color}; padding: 15px; border-radius: 15px; color: white; text-align: {alignment};
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); max-width: 70%; word-wrap: break-word;'>
+                <b>{sender}:</b><br>
+                <pre style='background: #282c34; color: #abb2bf; padding: 10px; border-radius: 5px; font-family: monospace;'>
+                    {code_content}
+                </pre>
+            </div>
+        </div>
+        """
+    else:
+        # Regular message HTML
+        message_html = f"""
+        <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
+            <div style='background-color: {color}; padding: 15px; border-radius: 15px; color: white; text-align: {alignment};
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); max-width: 70%; word-wrap: break-word;'>
+                <b>{sender}:</b><br>{text}
+            </div>
+        </div>
+        """
+    
+    # Render the message in Streamlit
     st.markdown(message_html, unsafe_allow_html=True)
 
 # Apply custom CSS for background image, hiding Streamlit UI elements, and custom styling
