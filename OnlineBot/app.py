@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
-import re
 
 # Load environment variables
 load_dotenv()
