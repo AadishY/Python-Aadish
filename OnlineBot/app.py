@@ -12,7 +12,7 @@ load_dotenv()
 # Constants
 MODEL_NAME = "gemma2-9b-it"
 MEMORY_LENGTH = 100
-BACKGROUND_IMAGE_URL = "https://i.postimg.cc/SsCtpXQg/merrge.gif"  # Replace with your image URL
+BACKGROUND_IMAGE_URL = "https://cdn.jsdelivr.net/gh/AadishY/Python-Aadish@main/merge.gif"  # Replace with your image URL
 
 # Initialize session state
 def initialize_session_state():
