@@ -77,8 +77,8 @@ def display_message(text, sender, color, right_align):
 def apply_custom_css():
     hide_streamlit_style = """
     <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
+    [data-testid="stToolbar"] {visibility: hidden !important;}
+    footer {visibility: hidden !important;}
     </style>
     """
     
