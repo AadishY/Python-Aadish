@@ -1,55 +1,24 @@
 import os
-import json
 import streamlit as st
 from dotenv import load_dotenv
 from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
-import time
 
 # Load environment variables
 load_dotenv()
 
 # Constants
 MODEL_NAME = "gemma2-9b-it"
-MEMORY_LENGTH = 10
-CACHE_FILE = "chat_history_cache.json"
-GIF_URL = "https://media1.tenor.com/m/V_0ti1a3_GoAAAAC/loading-azurlane.gif"  # Replace with your desired GIF URL
+MEMORY_LENGTH = 5
+GIF_URL = "https://media.giphy.com/media/3o7aD2Pq6tQXmvfw0k/giphy.gif"  # Replace with your desired GIF URL
 
 # Initialize session state
 def initialize_session_state():
     if 'chat_history' not in st.session_state:
-        st.session_state.chat_history = load_chat_history()
+        st.session_state.chat_history = []
     if 'memory' not in st.session_state:
         st.session_state.memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
-
-# Load chat history from cache
-def load_chat_history():
-    if os.path.exists(CACHE_FILE):
-        try:
-            with open(CACHE_FILE, 'r') as file:
-                return json.load(file)
-        except (IOError, json.JSONDecodeError):
-            return []  # Return an empty list if there's an error loading the file
-    return []
-
-# Save chat history to cache
-def save_chat_history():
-    try:
-        with open(CACHE_FILE, 'w') as file:
-            json.dump(st.session_state.chat_history, file)
-    except IOError:
-        st.error("Failed to save chat history.")
-
-# Clear chat history and cache
-def clear_chat():
-    st.session_state.chat_history = []
-    st.session_state.memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
-    try:
-        if os.path.exists(CACHE_FILE):
-            os.remove(CACHE_FILE)  # Delete the cached chat history file
-    except IOError:
-        st.error("Failed to delete chat history cache.")
 
 # Initialize the ChatGroq API
 def initialize_groq_chat():
@@ -71,7 +40,6 @@ def process_user_question(user_question, conversation):
         response = conversation(user_question)
         message = {'human': user_question, 'AI': response['response']}
         st.session_state.chat_history.append(message)
-        save_chat_history()
         return response['response']
     except Exception as e:
         st.error(f"Error processing question: {e}")
@@ -115,10 +83,7 @@ def main():
     # Show loading screen initially
     show_loading_gif()
     # Delay to simulate loading time
-    time.sleep(3)  # Adjust the sleep time as needed
-
-    # Remove loading screen and show the actual app content
-    st.experimental_rerun()
+    st.experimental_rerun()  # Refreshes the app to hide the GIF and show the content
 
     initialize_session_state()
 
@@ -126,7 +91,8 @@ def main():
     st.markdown("Chat with Aadish!")
 
     if st.button("Clear Chat"):
-        clear_chat()
+        st.session_state.chat_history = []
+        st.session_state.memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
 
     groq_chat = initialize_groq_chat()
     if groq_chat is None:
