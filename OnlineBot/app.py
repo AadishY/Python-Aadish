@@ -10,7 +10,10 @@ load_dotenv()
 
 # Constants
 MODEL_NAME = "gemma2-9b-it"
-MEMORY_LENGTH = 10
+MEMORY_LENGTH = 5
+PROFILES = [
+    "Aadish", "Aditya", "Anmol", "Prakhar", "Priyanshu", "Yuvraj", "Anonymous"
+]
 
 # Initialize session state
 def initialize_session_state():
@@ -18,6 +21,8 @@ def initialize_session_state():
         st.session_state.chat_history = []
     if 'memory' not in st.session_state:
         st.session_state.memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
+    if 'selected_profile' not in st.session_state:
+        st.session_state.selected_profile = "Anonymous"
 
 # Initialize the ChatGroq API
 def initialize_groq_chat():
@@ -49,7 +54,7 @@ def display_chat_history():
     chat_display = st.container()
     with chat_display:
         for message in st.session_state.chat_history:
-            display_message(message['human'], "You", "#007bff", right_align=True)
+            display_message(message['human'], st.session_state.selected_profile, "#007bff", right_align=True)
             display_message(message['AI'], "Aadish", "#28a745", right_align=False)
 
 # Display a single message
@@ -71,9 +76,16 @@ def display_message(text, sender, color, right_align):
 
 # Main application logic
 def main():
+    # Sidebar for profile selection
+    st.sidebar.title("Profile Selection")
+    selected_profile = st.sidebar.selectbox("Who is talking?", PROFILES, index=PROFILES.index("Anonymous"))
+    st.session_state.selected_profile = selected_profile
+
+    # Display profile name at the top
+    st.title(f"Chat with {st.session_state.selected_profile} 🤖")
+    
     initialize_session_state()
 
-    st.title("Aadish GPT 🤖")
     st.markdown("Chat with Aadish!")
 
     if st.button("Clear Chat"):
@@ -92,7 +104,7 @@ def main():
 
     user_question = st.chat_input("What is up?")
     if user_question:
-        display_message(user_question, "You", "#007bff", right_align=True)
+        display_message(user_question, st.session_state.selected_profile, "#007bff", right_align=True)
         with st.spinner("Aadish is typing..."):
             response = process_user_question(user_question, conversation)
         display_message(response, "Aadish", "#28a745", right_align=False)
