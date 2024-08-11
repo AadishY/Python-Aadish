@@ -10,7 +10,7 @@ load_dotenv()
 
 # Constants
 MODEL_NAME = "gemma2-9b-it"
-MEMORY_LENGTH = 5
+MEMORY_LENGTH = 10
 
 # Initialize session state
 def initialize_session_state():
