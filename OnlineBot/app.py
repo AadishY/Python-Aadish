@@ -10,12 +10,13 @@ load_dotenv()
 MODEL_NAME = "gemma2-9b-it"
 MEMORY_LENGTH = 5
 CACHE_FILE = "chat_history_cache.json"
+MEMORY_FILE = "conversation_memory_cache.json"
 
 def initialize_session_state():
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = load_chat_history()
     if 'memory' not in st.session_state:
-        st.session_state.memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
+        st.session_state.memory = load_memory()
 
 def load_chat_history():
     if os.path.exists(CACHE_FILE):
@@ -26,6 +27,25 @@ def load_chat_history():
 def save_chat_history():
     with open(CACHE_FILE, 'w') as file:
         json.dump(st.session_state.chat_history, file)
+
+def load_memory():
+    if os.path.exists(MEMORY_FILE):
+        with open(MEMORY_FILE, 'r') as file:
+            memory_data = json.load(file)
+            return ConversationBufferWindowMemory(
+                k=MEMORY_LENGTH, 
+                memory_variables=memory_data['memory_variables'],
+                messages=memory_data['messages']
+            )
+    return ConversationBufferWindowMemory(k=MEMORY_LENGTH)
+
+def save_memory():
+    memory_data = {
+        'memory_variables': st.session_state.memory.memory_variables,
+        'messages': st.session_state.memory.messages
+    }
+    with open(MEMORY_FILE, 'w') as file:
+        json.dump(memory_data, file)
 
 def initialize_groq_chat():
     groq_api_key = os.getenv("GROQ_API_KEY")
@@ -50,6 +70,7 @@ def process_user_question(user_question, conversation):
     message = {'human': user_question, 'AI': response['response']}
     st.session_state.chat_history.append(message)
     save_chat_history()
+    save_memory()
     return response['response']
 
 def main():
@@ -60,7 +81,9 @@ def main():
 
     if st.button("Clear Chat"):
         st.session_state.chat_history = []
+        st.session_state.memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
         save_chat_history()
+        save_memory()
 
     groq_chat = initialize_groq_chat()
     if groq_chat is None:
