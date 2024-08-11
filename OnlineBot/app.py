@@ -59,19 +59,30 @@ def main():
             background-size: cover;
             background-attachment: fixed;
         }}
+        .chat-container {{
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            max-width: 600px;
+            margin: auto;
+        }}
         .user-message {{
             background-color: #DCF8C6;
             border-radius: 15px;
             padding: 10px;
             margin: 5px;
-            text-align: right;
+            align-self: flex-end;
+            max-width: 80%;
+            word-wrap: break-word;
         }}
         .bot-message {{
             background-color: #FFFFFF;
             border-radius: 15px;
             padding: 10px;
             margin: 5px;
-            text-align: left;
+            align-self: flex-start;
+            max-width: 80%;
+            word-wrap: break-word;
         }}
         </style>
         """, unsafe_allow_html=True
@@ -83,9 +94,11 @@ def main():
     memory = ConversationBufferWindowMemory(k=100)
 
     st.divider()
+    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+
     if user_question := st.chat_input("What is up?"):
         st.session_state.chat_history.append({"human": user_question, "AI": ""})
-        
+
         # Display chat history
         for message in st.session_state.chat_history:
             if message['human']:
@@ -103,6 +116,8 @@ def main():
         
         # Display the latest AI response
         st.markdown(f"<div class='bot-message'>{response['response']}</div>", unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
