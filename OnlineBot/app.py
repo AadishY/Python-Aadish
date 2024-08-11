@@ -35,13 +35,11 @@ def initialize_groq_chat():
         return None
     return ChatGroq(groq_api_key=groq_api_key, model_name=MODEL_NAME)
 
-# Initialize the conversation chain with context prompt
+# Initialize the conversation chain
 def initialize_conversation(groq_chat, memory):
     if groq_chat is None:
         return None
-    # Add the context prompt to the conversation initialization
-    conversation = ConversationChain(llm=groq_chat, memory=memory, initial_prompt=CONTEXT_PROMPT)
-    return conversation
+    return ConversationChain(llm=groq_chat, memory=memory)
 
 # Clean response to remove any unintended HTML
 def clean_response(response_text):
@@ -53,10 +51,11 @@ def clean_response(response_text):
     )
     return clean_text
 
-# Process the user’s question and generate a response
+# Process the user’s question and generate a response with context
 def process_user_question(user_question, conversation):
     try:
-        response = conversation(user_question)
+        context_question = CONTEXT_PROMPT + "\n" + user_question
+        response = conversation(context_question)
         clean_response_text = clean_response(response['response'])
         message = {'human': user_question, 'AI': clean_response_text}
         st.session_state.chat_history.append(message)
