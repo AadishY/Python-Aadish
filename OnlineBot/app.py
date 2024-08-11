@@ -19,12 +19,12 @@ PROFILES = [
 # Custom data for profiles
 PROFILE_DATA = {
     "Aadish": {"likes": "gaming", "bio": "Likes playing Elden ring, he is good in gaming and all things, He is also the creator of the bot(Aadish)."},
-    "Aditya": {"likes": "gaming", "bio": "Like playing darksouls games like elden ring.He always get killed first in video games.They both are in same school and class. "},
+    "Aditya": {"likes": "gaming", "bio": "Like playing darksouls games like elden ring.He always get killed first in video games.They both are in same school and class."},
     "Anmol": {"likes": "", "bio": "They both are in same school and class"},
     "Prakhar": {"likes": "gaming", "bio": "They both are in same school and class"},
-    "Priyanshu": {"likes": "Studing", "bio": "A firend of the bot.They both are in same school and class"},
+    "Priyanshu": {"likes": "Studing", "bio": "A firend of the bot.They both are in same school and class."},
     "Yuvraj": {"likes": "playing sports", "bio": "Class mate of Aadish (the bot) and a good friend. They both are in same school and class"},
-    "Anonymous": {""}
+    "Anonymous": {"likes": "None", "bio": "No additional information provided."}
 }
 
 # Custom bot backstory
@@ -96,7 +96,7 @@ def display_message(text, sender, color, right_align):
 
 # Get profile custom data
 def get_profile_data(profile_name):
-    return PROFILE_DATA.get(profile_name, {"likes": "mystery", "bio": "A mystery seeker."})
+    return PROFILE_DATA.get(profile_name, {"likes": "None", "bio": "No additional information provided."})
 
 # Main application logic
 def main():
@@ -106,7 +106,7 @@ def main():
     st.session_state.selected_profile = selected_profile
 
     # Display profile name and title
-    st.title("Aadish GPT 🤖")
+    st.title("Aadish GPT")
     st.write(f"**Profile:** {st.session_state.selected_profile}")
 
     # Display profile custom data
