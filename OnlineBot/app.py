@@ -77,18 +77,29 @@ def display_message(text, sender, color, right_align):
 def apply_custom_css():
     custom_css = f"""
     <style>
-    .stApp {{
+    html, body {{
         background-image: url("{BACKGROUND_IMAGE_URL}");
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        min-height: 100vh;
+        background-size: cover; /* Ensures the image covers the entire screen */
+        background-position: center; /* Centers the image */
+        background-repeat: no-repeat; /* Prevents repeating the image */
+        background-attachment: fixed; /* Fixes the background image during scrolling */
+        margin: 0;
+        padding: 0;
+        min-height: 100vh; /* Ensures the container covers the full viewport height */
+    }}
+    .stApp {{
+        background: transparent; /* Ensure background image is visible through Streamlit's container */
     }}
     .stContainer {{
         padding: 0;
+        margin: 0;
     }}
     .stMarkdown {{
         padding: 0;
+        margin: 0;
+    }}
+    .stTextInput {{
+        background: transparent; /* Ensure background image is visible through input fields */
     }}
     </style>
     """
