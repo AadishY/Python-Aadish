@@ -74,6 +74,7 @@ def main():
             align-self: flex-end;
             max-width: 80%;
             word-wrap: break-word;
+            color: #000000; /* Black text for user messages */
         }}
         .bot-message {{
             background-color: #FFFFFF;
@@ -83,6 +84,7 @@ def main():
             align-self: flex-start;
             max-width: 80%;
             word-wrap: break-word;
+            color: #000000; /* Black text for bot messages */
         }}
         </style>
         """, unsafe_allow_html=True
