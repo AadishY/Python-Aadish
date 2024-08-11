@@ -54,10 +54,11 @@ def display_chat_history():
 
 # Display a single message
 def display_message(text, sender, color, right_align):
+    # Escape any HTML characters in the message text to avoid rendering raw HTML
+    escaped_text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
     alignment = 'right' if right_align else 'left'
     justify_content = 'flex-end' if right_align else 'flex-start'
-    # Escape any HTML characters in the message text
-    escaped_text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+    
     # Construct the HTML for the message
     message_html = f"""
     <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
@@ -67,6 +68,7 @@ def display_message(text, sender, color, right_align):
         </div>
     </div>
     """
+    
     # Render the message in Streamlit
     st.markdown(message_html, unsafe_allow_html=True)
 
