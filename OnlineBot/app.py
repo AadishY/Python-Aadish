@@ -81,12 +81,13 @@ def display_message(text, sender, color, right_align):
     
     st.markdown(message_html, unsafe_allow_html=True)
 
-# Apply custom CSS for background image and hiding Streamlit UI elements
+# Apply custom CSS for background image, hiding Streamlit UI elements, and custom styling
 def apply_custom_css():
     hide_streamlit_style = """
     <style>
     [data-testid="stToolbar"] {visibility: hidden !important;}
     footer {visibility: hidden !important;}
+    .css-1v3fvcr {display: none;} /* This hides the default Streamlit header */
     </style>
     """
     
@@ -124,7 +125,7 @@ def apply_custom_css():
 
 # Main application logic
 def main():
-    st.set_page_config(page_title="Aadish GPT", page_icon="🤖")  # Set the page title and icon
+    st.set_page_config(page_title="Aadish GPT", page_icon="🤖", page_description="Chat with Aadish GPT for an engaging conversation experience.")  # Set the page title, icon, and description
     apply_custom_css()
     initialize_session_state()
 
