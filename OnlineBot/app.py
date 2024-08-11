@@ -78,15 +78,25 @@ def display_message(text, sender, color, right_align):
         # Extract code content
         code_content = re.sub(code_block_pattern, r'\1', text, flags=re.DOTALL).strip()
         
-        # HTML for code block
+        # HTML and JavaScript for code block with copy button
         message_html = f"""
         <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
             <div style='background-color: {color}; padding: 15px; border-radius: 15px; color: white; text-align: {alignment};
             box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); max-width: 70%; word-wrap: break-word;'>
                 <b>{sender}:</b><br>
+                <button onclick="copyCode('{code_content.replace('\'', '\\\'')}')" style="background-color: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-bottom: 10px;">Copy Code</button>
                 <pre style='background: #282c34; color: #abb2bf; padding: 10px; border-radius: 5px; font-family: monospace;'>
                     {code_content}
                 </pre>
+                <script>
+                function copyCode(code) {{
+                    navigator.clipboard.writeText(code).then(function() {{
+                        alert('Code copied to clipboard!');
+                    }}, function(err) {{
+                        alert('Failed to copy code: ' + err);
+                    }});
+                }}
+                </script>
             </div>
         </div>
         """
