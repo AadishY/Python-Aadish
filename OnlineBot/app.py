@@ -35,6 +35,16 @@ def initialize_conversation(groq_chat, memory):
         return None
     return ConversationChain(llm=groq_chat, memory=memory)
 
+# Clean response to remove any unintended HTML for non-code responses
+def clean_response(response_text):
+    clean_text = (
+        response_text.replace('&', '&amp;')
+        .replace('<', '&lt;')
+        .replace('>', '&gt;')
+        .replace('\n', '<br>')  # Handle newlines
+    )
+    return clean_text
+
 # Process the user’s question and generate a response
 def process_user_question(user_question, conversation):
     try:
