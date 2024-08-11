@@ -84,6 +84,12 @@ def apply_custom_css():
         background-repeat: no-repeat;
         min-height: 100vh;
     }}
+    .stContainer {{
+        padding: 0;
+    }}
+    .stMarkdown {{
+        padding: 0;
+    }}
     </style>
     """
     st.markdown(custom_css, unsafe_allow_html=True)
