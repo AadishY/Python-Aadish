@@ -35,7 +35,7 @@ def initialize_conversation(groq_chat, memory):
         return None
     return ConversationChain(llm=groq_chat, memory=memory)
 
-# Clean response to remove any unintended HTML
+# Clean response to remove any unintended HTML for non-code responses
 def clean_response(response_text):
     clean_text = (
         response_text.replace('&', '&amp;')
@@ -75,6 +75,9 @@ def display_message(text, sender, color, right_align):
             # Display as normal message if not code
             alignment = 'right' if right_align else 'left'
             justify_content = 'flex-end' if right_align else 'flex-start'
+            
+            # Remove <br> tags from text if it is not code
+            text = text.replace('<br>', '\n')
 
             message_html = f"""
             <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
@@ -90,6 +93,9 @@ def display_message(text, sender, color, right_align):
         # Display user messages with custom HTML styling
         alignment = 'right' if right_align else 'left'
         justify_content = 'flex-end' if right_align else 'flex-start'
+        
+        # Remove <br> tags from text if it is not code
+        text = text.replace('<br>', '\n')
         
         message_html = f"""
         <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
