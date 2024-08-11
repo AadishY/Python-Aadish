@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
+import re
 
 # Load environment variables
 load_dotenv()
@@ -48,23 +49,13 @@ def clean_response(response_text):
 def process_user_question(user_question, conversation):
     try:
         response = conversation(user_question)
-        response_text = response['response']
-        # Append the message to history
-        message = {'human': user_question, 'AI': response_text}
+        clean_response_text = clean_response(response['response'])
+        message = {'human': user_question, 'AI': clean_response_text}
         st.session_state.chat_history.append(message)
-        return response_text
+        return clean_response_text
     except Exception as e:
         st.error(f"Error processing question: {e}")
         return "Sorry, something went wrong."
-
-# Check if text is a code block
-def is_code_block(text):
-    return text.startswith('```') and text.endswith('```')
-
-# Extract code block content
-def extract_code_content(text):
-    # Remove the leading and trailing ``` and any language specifier
-    return text.strip('```').strip()
 
 # Display chat history
 def display_chat_history():
@@ -74,46 +65,21 @@ def display_chat_history():
             display_message(message['human'], "You", "#007bff", right_align=True)
             display_message(message['AI'], "Aadish", "#28a745", right_align=False)
 
+# Display a single message
 def display_message(text, sender, color, right_align):
-    if is_code_block(text):
-        # Display code block if it contains code markers
-        code_content = extract_code_content(text)
-        st.code(code_content, language="python")
-    else:
-        if sender == "Aadish":
-            # Display as normal message with HTML styling
-            alignment = 'right' if right_align else 'left'
-            justify_content = 'flex-end' if right_align else 'flex-start'
-            
-            clean_text = clean_response(text).replace('<br>', '\n')
-
-            message_html = f"""
-            <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
-                <div style='background-color: {color}; padding: 15px; border-radius: 15px; color: white; text-align: {alignment};
-                box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); max-width: 70%; word-wrap: break-word;'>
-                    <b>{sender}:</b><br>{clean_text}
-                </div>
-            </div>
-            """
-            
-            st.markdown(message_html, unsafe_allow_html=True)
-        else:
-            # Display user messages with custom HTML styling
-            alignment = 'right' if right_align else 'left'
-            justify_content = 'flex-end' if right_align else 'flex-start'
-            
-            clean_text = clean_response(text).replace('<br>', '\n')
-            
-            message_html = f"""
-            <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
-                <div style='background-color: {color}; padding: 15px; border-radius: 15px; color: white; text-align: {alignment};
-                box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); max-width: 70%; word-wrap: break-word;'>
-                    <b>{sender}:</b><br>{clean_text}
-                </div>
-            </div>
-            """
-            
-            st.markdown(message_html, unsafe_allow_html=True)
+    alignment = 'right' if right_align else 'left'
+    justify_content = 'flex-end' if right_align else 'flex-start'
+    
+    message_html = f"""
+    <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
+        <div style='background-color: {color}; padding: 15px; border-radius: 15px; color: white; text-align: {alignment};
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); max-width: 70%; word-wrap: break-word;'>
+            <b>{sender}:</b><br>{text}
+        </div>
+    </div>
+    """
+    
+    st.markdown(message_html, unsafe_allow_html=True)
 
 # Apply custom CSS for background image, hiding Streamlit UI elements, and custom styling
 def apply_custom_css():
