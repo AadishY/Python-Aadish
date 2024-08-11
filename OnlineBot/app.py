@@ -67,19 +67,34 @@ def display_chat_history():
 
 # Display a single message
 def display_message(text, sender, color, right_align):
-    alignment = 'right' if right_align else 'left'
-    justify_content = 'flex-end' if right_align else 'flex-start'
-    
-    message_html = f"""
-    <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
-        <div style='background-color: {color}; padding: 15px; border-radius: 15px; color: white; text-align: {alignment};
-        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); max-width: 70%; word-wrap: break-word;'>
-            <b>{sender}:</b><br>{text}
+    # Detect if the message is a code block
+    if text.startswith('```') and text.endswith('```'):
+        code_content = text.strip('```')
+        display_code_block(code_content)
+    else:
+        alignment = 'right' if right_align else 'left'
+        justify_content = 'flex-end' if right_align else 'flex-start'
+        
+        message_html = f"""
+        <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
+            <div style='background-color: {color}; padding: 15px; border-radius: 15px; color: white; text-align: {alignment};
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); max-width: 70%; word-wrap: break-word;'>
+                <b>{sender}:</b><br>{text}
+            </div>
         </div>
+        """
+        
+        st.markdown(message_html, unsafe_allow_html=True)
+
+# Function to display code in a styled block with a copy button
+def display_code_block(code):
+    code_block = f"""
+    <div style="position: relative; background-color: #2d2d2d; color: white; border-radius: 10px; padding: 10px; font-family: monospace;">
+        <button onclick="navigator.clipboard.writeText(`{code}`)" style="position: absolute; top: 5px; right: 10px; background-color: #444; color: white; border: none; border-radius: 5px; cursor: pointer;">Copy</button>
+        <pre style="overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; padding: 10px; margin: 0;">{code}</pre>
     </div>
     """
-    
-    st.markdown(message_html, unsafe_allow_html=True)
+    st.markdown(code_block, unsafe_allow_html=True)
 
 # Apply custom CSS for background image, hiding Streamlit UI elements, and custom styling
 def apply_custom_css():
