@@ -16,8 +16,10 @@ CACHE_FILE = "chat_history_cache.json"
 
 # Initialize session state
 def initialize_session_state():
-    st.session_state.setdefault('chat_history', load_chat_history())
-    st.session_state.setdefault('memory', ConversationBufferWindowMemory(k=MEMORY_LENGTH))
+    if 'chat_history' not in st.session_state:
+        st.session_state.chat_history = load_chat_history()
+    if 'memory' not in st.session_state:
+        st.session_state.memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
 
 # Load chat history from cache
 def load_chat_history():
@@ -36,6 +38,16 @@ def save_chat_history():
             json.dump(st.session_state.chat_history, file)
     except IOError:
         st.error("Failed to save chat history.")
+
+# Clear chat history and cache
+def clear_chat():
+    st.session_state.chat_history = []
+    st.session_state.memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
+    try:
+        if os.path.exists(CACHE_FILE):
+            os.remove(CACHE_FILE)  # Delete the cached chat history file
+    except IOError:
+        st.error("Failed to delete chat history cache.")
 
 # Initialize the ChatGroq API
 def initialize_groq_chat():
@@ -74,16 +86,17 @@ def display_chat_history():
 # Display a single message
 def display_message(text, sender, color, right_align):
     alignment = 'right' if right_align else 'left'
-    cols = st.columns([1, 4]) if right_align else st.columns([4, 1])
-    with cols[1] if right_align else cols[0]:
-        st.markdown(
-            f"""
+    justify_content = 'flex-end' if right_align else 'flex-start'
+    st.markdown(
+        f"""
+        <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
             <div style='background-color: {color}; padding: 15px; border-radius: 15px; color: white; text-align: {alignment};
-            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); margin-bottom: 10px;'>
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); max-width: 70%; word-wrap: break-word;'>
                 <b>{sender}:</b><br>{text}
             </div>
-            """, unsafe_allow_html=True
-        )
+        </div>
+        """, unsafe_allow_html=True
+    )
 
 # Main application logic
 def main():
@@ -93,9 +106,7 @@ def main():
     st.markdown("Chat with Aadish!")
 
     if st.button("Clear Chat"):
-        st.session_state.chat_history.clear()
-        st.session_state.memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
-        save_chat_history()
+        clear_chat()
 
     groq_chat = initialize_groq_chat()
     if groq_chat is None:
