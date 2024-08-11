@@ -11,6 +11,7 @@ load_dotenv()
 # Constants
 MODEL_NAME = "gemma2-9b-it"
 MEMORY_LENGTH = 100
+BACKGROUND_IMAGE_URL = "https://i.pinimg.com/originals/38/e3/11/38e3115f1d06ba0b443a75ff0c7cf2ee.gif"  # Replace with your image URL
 
 # Initialize session state
 def initialize_session_state():
@@ -72,8 +73,24 @@ def display_message(text, sender, color, right_align):
     # Render the message in Streamlit
     st.markdown(message_html, unsafe_allow_html=True)
 
+# Apply custom CSS for background image
+def apply_custom_css():
+    custom_css = f"""
+    <style>
+    .stApp {{
+        background-image: url("{BACKGROUND_IMAGE_URL}");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        min-height: 100vh;
+    }}
+    </style>
+    """
+    st.markdown(custom_css, unsafe_allow_html=True)
+
 # Main application logic
 def main():
+    apply_custom_css()
     initialize_session_state()
 
     st.title("Aadish GPT 🤖")
