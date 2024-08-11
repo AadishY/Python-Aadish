@@ -11,7 +11,6 @@ load_dotenv()
 # Constants
 MODEL_NAME = "gemma2-9b-it"
 MEMORY_LENGTH = 5
-GIF_URL = "https://media.giphy.com/media/3o7aD2Pq6tQXmvfw0k/giphy.gif"  # Replace with your desired GIF URL
 
 # Initialize session state
 def initialize_session_state():
@@ -70,31 +69,8 @@ def display_message(text, sender, color, right_align):
         """, unsafe_allow_html=True
     )
 
-# Display the loading GIF
-def show_loading_gif():
-    st.markdown(
-        f"""
-        <div style='display: flex; justify-content: center; align-items: center; height: 100vh;'>
-            <img src="{GIF_URL}" alt="Loading..." style="max-width: 100%; height: auto;"/>
-        </div>
-        """, unsafe_allow_html=True
-    )
-
 # Main application logic
 def main():
-    # Show loading screen initially
-    show_loading_gif()
-    
-    # Use a placeholder to handle the transition from loading screen to main content
-    if 'loading_complete' not in st.session_state:
-        st.session_state.loading_complete = False
-    
-    if not st.session_state.loading_complete:
-        # Set the flag to indicate that the loading is complete
-        st.session_state.loading_complete = True
-        st.rerun()  # Refreshes the app to hide the GIF and show the content
-        return
-
     initialize_session_state()
 
     st.title("Aadish GPT 🤖")
