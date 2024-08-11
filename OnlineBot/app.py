@@ -67,8 +67,25 @@ def display_chat_history():
 
 def display_message(text, sender, color, right_align):
     if sender == "Aadish":
-        # Display the bot's response as a code block
-        st.code(text, language="python")
+        # Check if the message is code by a specific condition; here, assuming a placeholder condition
+        if "```" in text:
+            # Display the bot's response as a code block if it contains code markers
+            st.code(text, language="python")
+        else:
+            # Display as normal message if not code
+            alignment = 'right' if right_align else 'left'
+            justify_content = 'flex-end' if right_align else 'flex-start'
+
+            message_html = f"""
+            <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
+                <div style='background-color: {color}; padding: 15px; border-radius: 15px; color: white; text-align: {alignment};
+                box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); max-width: 70%; word-wrap: break-word;'>
+                    <b>{sender}:</b><br>{text}
+                </div>
+            </div>
+            """
+            
+            st.markdown(message_html, unsafe_allow_html=True)
     else:
         # Display user messages with custom HTML styling
         alignment = 'right' if right_align else 'left'
@@ -84,11 +101,6 @@ def display_message(text, sender, color, right_align):
         """
         
         st.markdown(message_html, unsafe_allow_html=True)
-
-
-
-
-
 
 # Apply custom CSS for background image, hiding Streamlit UI elements, and custom styling
 def apply_custom_css():
