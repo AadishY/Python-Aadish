@@ -41,7 +41,7 @@ def process_user_question(user_question, conversation):
 def main():
     initialize_session_state()
 
-    st.title("Aadish Bot ⚡️")
+    st.title("Aadish GPT 🤖")
     st.markdown("Chat with Aadish!")
 
     if st.button("Clear Chat"):
