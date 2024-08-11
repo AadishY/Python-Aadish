@@ -12,7 +12,7 @@ load_dotenv()
 # Constants
 MODEL_NAME = "gemma2-9b-it"
 MEMORY_LENGTH = 100
-BACKGROUND_IMAGE_URL = "https://example.com/path/to/your/image.jpg"  # Replace with your image URL
+BACKGROUND_IMAGE_URL = "https://giphy.com/embed/JnUgOhco3sSYsWBOfV"  # Replace with your image URL
 
 # Initialize session state
 def initialize_session_state():
