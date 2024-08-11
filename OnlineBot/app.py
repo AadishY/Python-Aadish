@@ -37,7 +37,6 @@ def initialize_conversation(groq_chat, memory):
 
 # Clean response to remove any unintended HTML
 def clean_response(response_text):
-    # Escape HTML characters to prevent raw HTML from being displayed
     clean_text = (
         response_text.replace('&', '&amp;')
         .replace('<', '&lt;')
@@ -71,7 +70,6 @@ def display_message(text, sender, color, right_align):
     alignment = 'right' if right_align else 'left'
     justify_content = 'flex-end' if right_align else 'flex-start'
     
-    # Construct the HTML for the message
     message_html = f"""
     <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
         <div style='background-color: {color}; padding: 15px; border-radius: 15px; color: white; text-align: {alignment};
@@ -81,7 +79,6 @@ def display_message(text, sender, color, right_align):
     </div>
     """
     
-    # Render the message in Streamlit
     st.markdown(message_html, unsafe_allow_html=True)
 
 # Apply custom CSS for background image and hiding Streamlit UI elements
@@ -90,8 +87,9 @@ def apply_custom_css():
     <style>
     [data-testid="stToolbar"] {visibility: hidden !important;}
     footer {visibility: hidden !important;}
-    .viewerBadge_container__1QSob {visibility: hidden;} /* Hide the Streamlit "Hosted with" label */
-    .viewerBadge_link__1S137 {visibility: hidden;} /* Hide the Streamlit crown icon */
+    .viewerBadge_container__1QSob {visibility: hidden !important;}
+    .viewerBadge_link__1S137 {visibility: hidden !important;}
+    .viewerBadge_container__1QSob {visibility: hidden !important;}
     </style>
     """
     
@@ -99,16 +97,16 @@ def apply_custom_css():
     <style>
     html, body {{
         background-image: url("{BACKGROUND_IMAGE_URL}");
-        background-size: cover; /* Ensures the image covers the entire screen */
-        background-position: center; /* Centers the image */
-        background-repeat: no-repeat; /* Prevents repeating the image */
-        background-attachment: fixed; /* Fixes the background image during scrolling */
+        background-size: cover; 
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
         margin: 0;
         padding: 0;
-        min-height: 100vh; /* Ensures the container covers the full viewport height */
+        min-height: 100vh; 
     }}
     .stApp {{
-        background: transparent; /* Ensure background image is visible through Streamlit's container */
+        background: transparent;
     }}
     .stContainer {{
         padding: 0;
@@ -119,7 +117,7 @@ def apply_custom_css():
         margin: 0;
     }}
     .stTextInput {{
-        background: transparent; /* Ensure background image is visible through input fields */
+        background: transparent;
     }}
     </style>
     """
