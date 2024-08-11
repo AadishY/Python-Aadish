@@ -11,7 +11,7 @@ load_dotenv()
 # Constants
 MODEL_NAME = "gemma2-9b-it"
 MEMORY_LENGTH = 100
-BACKGROUND_IMAGE_URL = "https://i.pinimg.com/originals/38/e3/11/38e3115f1d06ba0b443a75ff0c7cf2ee.gif"  # Replace with your image URL
+BACKGROUND_IMAGE_URL = "https://example.com/path/to/your/image.jpg"  # Replace with your image URL
 
 # Initialize session state
 def initialize_session_state():
@@ -73,9 +73,16 @@ def display_message(text, sender, color, right_align):
     # Render the message in Streamlit
     st.markdown(message_html, unsafe_allow_html=True)
 
-# Apply custom CSS for background image
+# Apply custom CSS for background image and hiding Streamlit UI elements
 def apply_custom_css():
-    custom_css = f"""
+    hide_streamlit_style = """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    </style>
+    """
+    
+    background_css = f"""
     <style>
     html, body {{
         background-image: url("{BACKGROUND_IMAGE_URL}");
@@ -103,7 +110,9 @@ def apply_custom_css():
     }}
     </style>
     """
-    st.markdown(custom_css, unsafe_allow_html=True)
+    
+    st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+    st.markdown(background_css, unsafe_allow_html=True)
 
 # Main application logic
 def main():
