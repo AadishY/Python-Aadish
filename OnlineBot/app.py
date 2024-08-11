@@ -10,7 +10,7 @@ from langchain_groq import ChatGroq
 load_dotenv()
 
 # Constants
-MODEL_NAME = "gemma2-9b-it"
+MODEL_NAME = "llama-3.1-70b-versatile"
 MEMORY_LENGTH = 10
 PROFILES = [
     "Aadish", "Aditya", "Anmol", "Prakhar", "Priyanshu", "Yuvraj", "Anonymous"
