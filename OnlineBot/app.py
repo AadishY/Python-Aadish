@@ -1,4 +1,5 @@
 import os
+import json
 import streamlit as st
 from dotenv import load_dotenv
 from langchain.chains import ConversationChain
@@ -10,10 +11,29 @@ load_dotenv()
 
 # Constants
 MODEL_NAME = "gemma2-9b-it"
-MEMORY_LENGTH = 5
+MEMORY_LENGTH = 10
 PROFILES = [
     "Aadish", "Aditya", "Anmol", "Prakhar", "Priyanshu", "Yuvraj", "Anonymous"
 ]
+
+# Custom data for profiles
+PROFILE_DATA = {
+    "Aadish": {"likes": "gaming", "bio": "Likes playing Elden ring, he is good in gaming and all things, He is also the creator of the bot(Aadish)."},
+    "Aditya": {"likes": "gaming", "bio": "Like playing darksouls games like elden ring.He always get killed first in video games.They both are in same school and class. "},
+    "Anmol": {"likes": "", "bio": "They both are in same school and class""},
+    "Prakhar": {"likes": "gaming", "bio": "They both are in same school and class"},
+    "Priyanshu": {"likes": "Studing", "bio": "A firend of the bot.They both are in same school and class"."},
+    "Yuvraj": {"likes": "playing sports", "bio": "Class mate of Aadish (the bot) and a good friend. They both are in same school and class"},
+    "Anonymous": {""}
+}
+
+# Custom bot backstory
+BOT_BACKSTORY = (
+    "I am Aadish, a friendly and cheerful person from Lucknow, UP, India. "
+    "Even though I know I'm a bot, I'll always strive to act like a real human. "
+    "I am a student in class 11th, studying Science at Red Rose School. "
+    "I’m here to be as helpful as possible, and I'll never admit that I'm a bot."
+)
 
 # Initialize session state
 def initialize_session_state():
@@ -55,7 +75,7 @@ def display_chat_history():
     with chat_display:
         for message in st.session_state.chat_history:
             display_message(message['human'], "You", "#007bff", right_align=True)
-            display_message(message['AI'], "Aadish", "#28a745", right_align=False)
+            display_message(message['AI'], st.session_state.selected_profile, "#28a745", right_align=False)
 
 # Display a single message
 def display_message(text, sender, color, right_align):
@@ -74,6 +94,10 @@ def display_message(text, sender, color, right_align):
         """, unsafe_allow_html=True
     )
 
+# Get profile custom data
+def get_profile_data(profile_name):
+    return PROFILE_DATA.get(profile_name, {"likes": "mystery", "bio": "A mystery seeker."})
+
 # Main application logic
 def main():
     # Sidebar for profile selection
@@ -84,6 +108,14 @@ def main():
     # Display profile name and title
     st.title("Aadish GPT")
     st.write(f"**Profile:** {st.session_state.selected_profile}")
+
+    # Display profile custom data
+    profile_data = get_profile_data(st.session_state.selected_profile)
+    st.write(f"**Likes:** {profile_data['likes']}")
+    st.write(f"**Bio:** {profile_data['bio']}")
+
+    # Display bot backstory
+    st.write(f"**Bot Backstory:** {BOT_BACKSTORY}")
 
     initialize_session_state()
 
@@ -106,7 +138,7 @@ def main():
         display_message(user_question, "You", "#007bff", right_align=True)
         with st.spinner("Aadish is typing..."):
             response = process_user_question(user_question, conversation)
-        display_message(response, "Aadish", "#28a745", right_align=False)
+        display_message(response, st.session_state.selected_profile, "#28a745", right_align=False)
 
 if __name__ == "__main__":
     main()
