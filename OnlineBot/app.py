@@ -18,8 +18,6 @@ def initialize_session_state():
         st.session_state.chat_history = []
     if 'memory' not in st.session_state:
         st.session_state.memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
-    if 'show_chat' not in st.session_state:
-        st.session_state.show_chat = True
 
 # Initialize the ChatGroq API
 def initialize_groq_chat():
@@ -47,13 +45,12 @@ def process_user_question(user_question, conversation):
         return "Sorry, something went wrong."
 
 # Display chat history
-def display_chat_history(show_chat):
-    if show_chat:
-        chat_display = st.container()
-        with chat_display:
-            for message in st.session_state.chat_history:
-                display_message(message['human'], "You", "#007bff", right_align=True)
-                display_message(message['AI'], "Aadish", "#28a745", right_align=False)
+def display_chat_history():
+    chat_display = st.container()
+    with chat_display:
+        for message in st.session_state.chat_history:
+            display_message(message['human'], "You", "#007bff", right_align=True)
+            display_message(message['AI'], "Aadish", "#28a745", right_align=False)
 
 # Display a single message
 def display_message(text, sender, color, right_align):
@@ -79,9 +76,6 @@ def main():
     st.title("Aadish GPT 🤖")
     st.markdown("Chat with Aadish!")
 
-    show_chat = st.checkbox("Show Chat History")
-    st.session_state.show_chat = show_chat
-
     if st.button("Clear Chat"):
         st.session_state.chat_history = []
         st.session_state.memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
@@ -94,7 +88,7 @@ def main():
     if conversation is None:
         return
 
-    display_chat_history(show_chat)
+    display_chat_history()
 
     user_question = st.chat_input("What is up?")
     if user_question:
