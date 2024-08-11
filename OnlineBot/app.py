@@ -1,153 +1,162 @@
 import os
 import streamlit as st
+from dotenv import load_dotenv
 from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
-import dotenv
 import re
 
-dotenv.load_dotenv(dotenv.find_dotenv())
+# Load environment variables
+load_dotenv()
 
+# Constants
+MODEL_NAME = "gemma2-9b-it"
+MEMORY_LENGTH = 100
+BACKGROUND_IMAGE_URL = "https://cdn.jsdelivr.net/gh/AadishY/Python-Aadish@main/merge.gif"  # Replace with your image URL
+
+# Initialize session state
 def initialize_session_state():
-    """
-    Initialize the session state variables if they don't exist.
-    """
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
-    if 'model' not in st.session_state:
-        st.session_state.model = 'llama3-70b-8192'
+    if 'memory' not in st.session_state:
+        st.session_state.memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
 
-def display_customization_options():
-    """
-    Add customization options to the sidebar for model selection and memory length.
-    """
-    st.sidebar.title('Customization')
-    model = st.sidebar.selectbox(
-        'Choose a model',
-        ['llama3-70b-8192', 'llama3-8b-8192', 'mixtral-8x7b-32768', 'gemma-7b-it'],
-        key='model_selectbox'
-    )
-    conversational_memory_length = st.sidebar.slider('Conversational memory length:', 1, 10, value=5)
-    return model, conversational_memory_length
+# Initialize the ChatGroq API
+def initialize_groq_chat():
+    groq_api_key = os.getenv("GROQ_API_KEY")
+    if not groq_api_key:
+        st.error("GROQ_API_KEY is not set in environment variables.")
+        return None
+    return ChatGroq(groq_api_key=groq_api_key, model_name=MODEL_NAME)
 
-def initialize_groq_chat(groq_api_key, model):
-    """
-    Initialize the Groq Langchain chat object.
-    """
-    return ChatGroq(
-        groq_api_key=groq_api_key,
-        model_name=model
-    )
-
+# Initialize the conversation chain
 def initialize_conversation(groq_chat, memory):
-    """
-    Initialize the conversation chain with the Groq chat object and memory.
-    """
-    return ConversationChain(
-        llm=groq_chat,
-        memory=memory
+    if groq_chat is None:
+        return None
+    return ConversationChain(llm=groq_chat, memory=memory)
+
+# Clean response to remove any unintended HTML
+def clean_response(response_text):
+    clean_text = (
+        response_text.replace('&', '&amp;')
+        .replace('<', '&lt;')
+        .replace('>', '&gt;')
+        .replace('\n', '<br>')  # Handle newlines
     )
+    return clean_text
 
+# Process the user’s question and generate a response
 def process_user_question(user_question, conversation):
-    """
-    Process the user's question and generate a response using the conversation chain.
-    """
-    response = conversation(user_question)
-    message = {'human': user_question, 'AI': response['response']}
-    st.session_state.chat_history.append(message)
+    try:
+        response = conversation(user_question)
+        clean_response_text = clean_response(response['response'])
+        message = {'human': user_question, 'AI': clean_response_text}
+        st.session_state.chat_history.append(message)
+        return clean_response_text
+    except Exception as e:
+        st.error(f"Error processing question: {e}")
+        return "Sorry, something went wrong."
 
+# Display chat history
+def display_chat_history():
+    chat_display = st.container()
+    with chat_display:
+        for message in st.session_state.chat_history:
+            display_message(message['human'], "You", "#007bff", right_align=True)
+            display_message(message['AI'], "Aadish", "#28a745", right_align=False)
+
+# Display a single message
 def display_message(text, sender, color, right_align):
-    """
-    Display a single message with styling. Handles code blocks by detecting triple backticks.
-    """
     alignment = 'right' if right_align else 'left'
     justify_content = 'flex-end' if right_align else 'flex-start'
-
-    # Detect code blocks using triple backticks
-    code_block_pattern = r'```(.*?)```'
-    is_code_block = re.search(code_block_pattern, text, re.DOTALL)
     
-    if is_code_block:
-        # Extract code content
-        code_content = re.sub(code_block_pattern, r'\1', text, flags=re.DOTALL).strip()
-
-        # HTML and JavaScript for code block with copy button
-        message_html = f"""
-        <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
-            <div style='background-color: {color}; padding: 15px; border-radius: 15px; color: white; text-align: {alignment};
-            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); max-width: 70%; word-wrap: break-word;'>
-                <b>{sender}:</b><br>
-                <button onclick="copyCode('{code_content.replace('\'', '\\\'')}')" style="background-color: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-bottom: 10px;">Copy Code</button>
-                <pre style='background: #282c34; color: #abb2bf; padding: 10px; border-radius: 5px; font-family: monospace;'>
-                    {code_content}
-                </pre>
-                <script>
-                function copyCode(code) {{
-                    navigator.clipboard.writeText(code).then(function() {{
-                        alert('Code copied to clipboard!');
-                    }}, function(err) {{
-                        alert('Failed to copy code: ' + err);
-                    }});
-                }}
-                </script>
-            </div>
+    message_html = f"""
+    <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
+        <div style='background-color: {color}; padding: 15px; border-radius: 15px; color: white; text-align: {alignment};
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); max-width: 70%; word-wrap: break-word;'>
+            <b>{sender}:</b><br>{text}
         </div>
-        """
-    else:
-        # Regular message HTML
-        message_html = f"""
-        <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
-            <div style='background-color: {color}; padding: 15px; border-radius: 15px; color: white; text-align: {alignment};
-            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); max-width: 70%; word-wrap: break-word;'>
-                <b>{sender}:</b><br>{text}
-            </div>
-        </div>
-        """
+    </div>
+    """
     
-    # Render the message in Streamlit
     st.markdown(message_html, unsafe_allow_html=True)
 
-def main():
+# Apply custom CSS for background image, hiding Streamlit UI elements, and custom styling
+def apply_custom_css():
+    hide_streamlit_style = """
+    <style>
+    [data-testid="stToolbar"] {visibility: hidden !important;}
+    footer {visibility: hidden !important;}
+    .css-1v3fvcr {display: none;} /* This hides the default Streamlit header */
+    </style>
     """
-    The main entry point of the application.
+    
+    background_css = f"""
+    <style>
+    html, body {{
+        background-image: url("{BACKGROUND_IMAGE_URL}");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+    }}
+    .stApp {{
+        background: transparent;
+    }}
+    .stContainer {{
+        padding: 0;
+        margin: 0;
+    }}
+    .stMarkdown {{
+        padding: 0;
+        margin: 0;
+    }}
+    .stTextInput {{
+        background: transparent;
+    }}
+    </style>
     """
-    groq_api_key = os.environ['GROQ_API_KEY']
+    
+    st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+    st.markdown(background_css, unsafe_allow_html=True)
 
+    # Add meta description
+    st.markdown("""
+    <meta name="description" content="Chat with Aadish GPT for an engaging conversation experience.">
+    """, unsafe_allow_html=True)
+
+# Main application logic
+def main():
+    st.set_page_config(page_title="Aadish GPT", page_icon="🤖")  # Set the page title and icon
+    apply_custom_css()
     initialize_session_state()
 
-    st.set_page_config(page_title="Lightning ⚡️", page_icon="⚡️")  # Set the page title and icon
+    st.title("Aadish GPT 🤖")
+    st.markdown("Chat with Aadish!")
 
-    st.title("Lightning ⚡️")
-    st.markdown("Chat with Lightning, an ultra-fast AI chatbot powered by Groq LPUs!")
-
-    model, conversational_memory_length = display_customization_options()
-
-    if st.session_state.model != model:
-        # Reset chat history and session state when the model is switched
+    if st.button("Clear Chat"):
         st.session_state.chat_history = []
-        st.session_state.model = model
-        st.experimental_rerun()
+        st.session_state.memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
 
-    memory = ConversationBufferWindowMemory(k=conversational_memory_length)
+    groq_chat = initialize_groq_chat()
+    if groq_chat is None:
+        return
 
-    st.divider()
-    if user_question := st.chat_input("What is up?"):
-        st.session_state.chat_history.append({"human": user_question, "AI": ""})
-        with st.chat_message("user"):
-            st.markdown(user_question)
+    conversation = initialize_conversation(groq_chat, st.session_state.memory)
+    if conversation is None:
+        return
 
-        for message in st.session_state.chat_history:
-            memory.save_context({'input': message['human']}, {'output': message['AI']})
+    display_chat_history()
 
-        groq_chat = initialize_groq_chat(groq_api_key, model)
-        conversation = initialize_conversation(groq_chat, memory)
-
-        process_user_question(user_question, conversation)
-
-        with st.chat_message("assistant"):
-            response = conversation(user_question)
-            display_message(response['response'], "Lightning", "#28a745", right_align=False)
-            st.session_state.chat_history[-1]["AI"] = response['response']
+    user_question = st.chat_input("What is up?")
+    if user_question:
+        display_message(user_question, "You", "#007bff", right_align=True)
+        with st.spinner("Aadish is typing..."):
+            response = process_user_question(user_question, conversation)
+        display_message(response, "Aadish", "#28a745", right_align=False)
 
 if __name__ == "__main__":
     main()
