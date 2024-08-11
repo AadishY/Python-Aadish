@@ -20,7 +20,7 @@ PROFILES = [
 PROFILE_DATA = {
     "Aadish": {"likes": "gaming", "bio": "Likes playing Elden ring, he is good in gaming and all things, He is also the creator of the bot(Aadish)."},
     "Aditya": {"likes": "gaming", "bio": "Like playing darksouls games like elden ring.He always get killed first in video games.They both are in same school and class. "},
-    "Anmol": {"likes": "", "bio": "They both are in same school and class""},
+    "Anmol": {"likes": "", "bio": "They both are in same school and class"},
     "Prakhar": {"likes": "gaming", "bio": "They both are in same school and class"},
     "Priyanshu": {"likes": "Studing", "bio": "A firend of the bot.They both are in same school and class"."},
     "Yuvraj": {"likes": "playing sports", "bio": "Class mate of Aadish (the bot) and a good friend. They both are in same school and class"},
