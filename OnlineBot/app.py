@@ -58,16 +58,17 @@ def display_message(text, sender, color, right_align):
     justify_content = 'flex-end' if right_align else 'flex-start'
     # Escape any HTML characters in the message text
     escaped_text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-    st.markdown(
-        f"""
-        <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
-            <div style='background-color: {color}; padding: 15px; border-radius: 15px; color: white; text-align: {alignment};
-            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); max-width: 70%; word-wrap: break-word;'>
-                <b>{sender}:</b><br>{escaped_text}
-            </div>
+    # Construct the HTML for the message
+    message_html = f"""
+    <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
+        <div style='background-color: {color}; padding: 15px; border-radius: 15px; color: white; text-align: {alignment};
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); max-width: 70%; word-wrap: break-word;'>
+            <b>{sender}:</b><br>{escaped_text}
         </div>
-        """, unsafe_allow_html=True
-    )
+    </div>
+    """
+    # Render the message in Streamlit
+    st.markdown(message_html, unsafe_allow_html=True)
 
 # Main application logic
 def main():
