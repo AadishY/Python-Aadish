@@ -41,8 +41,8 @@ def process_user_question(user_question, conversation):
 def main():
     initialize_session_state()
 
-    st.title("Lightning ⚡️")
-    st.markdown("Chat with Aadish, an ultra-fast AI chatbot!")
+    st.title("Aadish Bot ⚡️")
+    st.markdown("Chat with Aadish!")
 
     if st.button("Clear Chat"):
         st.session_state.chat_history = []
