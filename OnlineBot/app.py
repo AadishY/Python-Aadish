@@ -35,28 +35,27 @@ def initialize_conversation(groq_chat, memory):
         return None
     return ConversationChain(llm=groq_chat, memory=memory)
 
-# Clean response to remove any unintended HTML for non-code responses
-def clean_response(response_text):
-    clean_text = (
-        response_text.replace('&', '&amp;')
-        .replace('<', '&lt;')
-        .replace('>', '&gt;')
-        .replace('\n', '<br>')  # Handle newlines
-    )
-    return clean_text
-
 # Process the user’s question and generate a response
 def process_user_question(user_question, conversation):
     try:
         response = conversation(user_question)
         response_text = response['response']
-        # Append the message to history without cleaning HTML for code responses
+        # Append the message to history
         message = {'human': user_question, 'AI': response_text}
         st.session_state.chat_history.append(message)
         return response_text
     except Exception as e:
         st.error(f"Error processing question: {e}")
         return "Sorry, something went wrong."
+
+# Check if text is a code block
+def is_code_block(text):
+    return text.startswith('```') and text.endswith('```')
+
+# Extract code block content
+def extract_code_content(text):
+    # Remove the leading and trailing ``` and any language specifier
+    return text.strip('```').strip()
 
 # Display chat history
 def display_chat_history():
@@ -68,20 +67,16 @@ def display_chat_history():
 
 def display_message(text, sender, color, right_align):
     if sender == "Aadish":
-        if "```" in text:
+        if is_code_block(text):
             # Display code block if it contains code markers
-            st.code(text, language="python")
+            code_content = extract_code_content(text)
+            st.code(code_content, language="python")
         else:
             # Display as normal message with HTML styling
             alignment = 'right' if right_align else 'left'
             justify_content = 'flex-end' if right_align else 'flex-start'
             
-            try:
-                # Clean HTML for non-code responses
-                clean_text = clean_response(text).replace('<br>', '\n')
-            except Exception as e:
-                st.error(f"Error cleaning response: {e}")
-                clean_text = text
+            clean_text = clean_response(text).replace('<br>', '\n')
 
             message_html = f"""
             <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
@@ -98,12 +93,7 @@ def display_message(text, sender, color, right_align):
         alignment = 'right' if right_align else 'left'
         justify_content = 'flex-end' if right_align else 'flex-start'
         
-        try:
-            # Clean HTML for non-code responses
-            clean_text = clean_response(text).replace('<br>', '\n')
-        except Exception as e:
-            st.error(f"Error cleaning response: {e}")
-            clean_text = text
+        clean_text = clean_response(text).replace('<br>', '\n')
         
         message_html = f"""
         <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
