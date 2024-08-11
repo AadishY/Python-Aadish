@@ -35,6 +35,16 @@ def initialize_conversation(groq_chat, memory):
         return None
     return ConversationChain(llm=groq_chat, memory=memory)
 
+# Clean response to remove any unintended HTML for non-code responses
+def clean_response(response_text):
+    clean_text = (
+        response_text.replace('&', '&amp;')
+        .replace('<', '&lt;')
+        .replace('>', '&gt;')
+        .replace('\n', '<br>')  # Handle newlines
+    )
+    return clean_text
+
 # Process the user’s question and generate a response
 def process_user_question(user_question, conversation):
     try:
@@ -58,7 +68,6 @@ def display_chat_history():
 
 def display_message(text, sender, color, right_align):
     if sender == "Aadish":
-        # Display the bot's response
         if "```" in text:
             # Display code block if it contains code markers
             st.code(text, language="python")
@@ -67,8 +76,12 @@ def display_message(text, sender, color, right_align):
             alignment = 'right' if right_align else 'left'
             justify_content = 'flex-end' if right_align else 'flex-start'
             
-            # Clean HTML for non-code responses
-            clean_text = clean_response(text).replace('<br>', '\n')
+            try:
+                # Clean HTML for non-code responses
+                clean_text = clean_response(text).replace('<br>', '\n')
+            except Exception as e:
+                st.error(f"Error cleaning response: {e}")
+                clean_text = text
 
             message_html = f"""
             <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
@@ -85,8 +98,12 @@ def display_message(text, sender, color, right_align):
         alignment = 'right' if right_align else 'left'
         justify_content = 'flex-end' if right_align else 'flex-start'
         
-        # Clean HTML for non-code responses
-        clean_text = clean_response(text).replace('<br>', '\n')
+        try:
+            # Clean HTML for non-code responses
+            clean_text = clean_response(text).replace('<br>', '\n')
+        except Exception as e:
+            st.error(f"Error cleaning response: {e}")
+            clean_text = text
         
         message_html = f"""
         <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
