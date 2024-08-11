@@ -67,10 +67,9 @@ def display_chat_history():
 
 # Display a single message
 def display_message(text, sender, color, right_align):
-    # Detect if the message is a code block
-    if text.startswith('```') and text.endswith('```'):
-        code_content = text.strip('```')
-        display_code_block(code_content)
+    if sender == "Aadish":
+        # Display the bot's response as code in a darker box
+        st.code(f"{sender}: {text}", language="python")
     else:
         alignment = 'right' if right_align else 'left'
         justify_content = 'flex-end' if right_align else 'flex-start'
@@ -85,16 +84,6 @@ def display_message(text, sender, color, right_align):
         """
         
         st.markdown(message_html, unsafe_allow_html=True)
-
-# Function to display code in a styled block with a copy button
-def display_code_block(code):
-    code_block = f"""
-    <div style="position: relative; background-color: #2d2d2d; color: white; border-radius: 10px; padding: 10px; font-family: monospace;">
-        <button onclick="navigator.clipboard.writeText(`{code}`)" style="position: absolute; top: 5px; right: 10px; background-color: #444; color: white; border: none; border-radius: 5px; cursor: pointer;">Copy</button>
-        <pre style="overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; padding: 10px; margin: 0;">{code}</pre>
-    </div>
-    """
-    st.markdown(code_block, unsafe_allow_html=True)
 
 # Apply custom CSS for background image, hiding Streamlit UI elements, and custom styling
 def apply_custom_css():
