@@ -1,98 +1,101 @@
-import json
-import warnings
-import pickle
-import random
-import logging
-from groq import Groq
-from langchain.chains import LLMChain
-from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder
-from langchain_core.messages import SystemMessage
+import os
+import streamlit as st
+from dotenv import load_dotenv
+from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
 
-# Constants and Configurations
-GROQ_API_KEY = "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"
-MODELS = {
-    "1": "mixtral-8x7b-32768",
-    "2": "gemma-7b-it",
-    "3": "llama3-8b-8192"
-}
-CONTEXT_PROMPT = "You are Lyla. You are friendly and you behave like a human. You are having a casual conversation."
-MEMORY_SIZE = 100
-MEMORY_FILE_PREFIX = "conversation_memory_"  # File prefix to store conversation memory
-CUSTOM_DATA = {"favorite_color": "blue",
-               "hometown": "Springfield",
-               # Add more info
-               } 
+# Load environment variables
+load_dotenv()
 
-# Profiles and their respective data
-PROFILES = {
-    "1": {"name": "Aadish", "context": CONTEXT_PROMPT + " with Aadish, your classmate.", "favorite_color": "blue", "hometown": "Springfield"},
-    "2": {"name": "Prakhar", "context": CONTEXT_PROMPT + " with Prakhar, your friend.", "favorite_color": "green", "hometown": "San Francisco"},
-    # Add more profiles as needed
-}
+# Constants
+MODEL_NAME = "gemma2-9b-it"
+MEMORY_LENGTH = 5
 
-def choose_profile():
-    print("Choose a profile:")
-    for key, value in PROFILES.items():
-        print(f"{key}. {value['name']}")
-    return PROFILES.get(input("Enter the number corresponding to the profile you want to use: "), PROFILES["1"])
+# Initialize session state
+def initialize_session_state():
+    if 'chat_history' not in st.session_state:
+        st.session_state.chat_history = []
+    if 'memory' not in st.session_state:
+        st.session_state.memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
 
-def choose_model():
-    print("Choose a model:")
-    for key, value in MODELS.items():
-        print(f"{key}. {value}")
-    return MODELS.get(input("Enter the number corresponding to the model you want to use: "), "llama3-8b-8192")
+# Initialize the ChatGroq API
+def initialize_groq_chat():
+    groq_api_key = os.getenv("GROQ_API_KEY")
+    if not groq_api_key:
+        st.error("GROQ_API_KEY is not set in environment variables.")
+        return None
+    return ChatGroq(groq_api_key=groq_api_key, model_name=MODEL_NAME)
 
-def initialize_memory(profile_name):
-    memory_file = f"{MEMORY_FILE_PREFIX}{profile_name}.pkl"
+# Initialize the conversation chain
+def initialize_conversation(groq_chat, memory):
+    if groq_chat is None:
+        return None
+    return ConversationChain(llm=groq_chat, memory=memory)
+
+# Process the user’s question and generate a response
+def process_user_question(user_question, conversation):
     try:
-        with open(memory_file, "rb") as file:
-            memory = pickle.load(file)
-    except FileNotFoundError:
-        memory = ConversationBufferWindowMemory(k=MEMORY_SIZE, memory_key="chat_history", return_messages=True)
-    return memory
-
-def save_memory(memory, profile_name):
-    memory_file = f"{MEMORY_FILE_PREFIX}{profile_name}.pkl"
-    try:
-        with open(memory_file, "wb") as file:
-            pickle.dump(memory, file)
+        response = conversation(user_question)
+        message = {'human': user_question, 'AI': response['response']}
+        st.session_state.chat_history.append(message)
+        return response['response']
     except Exception as e:
-        logging.error(f"Error occurred while saving memory for profile {profile_name}: {e}")
-    else:
-        logging.info(f"Memory for profile {profile_name} saved successfully.")
+        st.error(f"Error processing question: {e}")
+        return "Sorry, something went wrong."
 
-def construct_prompt(context_prompt, user_input, custom_data, temperature, max_tokens):
-    return ChatPromptTemplate.from_messages([
-        SystemMessage(content=context_prompt),
-        MessagesPlaceholder(variable_name="chat_history"),
-        HumanMessagePromptTemplate.from_template(user_input),
-        SystemMessage(content=json.dumps(custom_data)),
-        SystemMessage(content=f"Temperature: {temperature}"),
-        SystemMessage(content=f"Max Tokens: {max_tokens}")
-    ])
+# Display chat history
+def display_chat_history():
+    chat_display = st.container()
+    with chat_display:
+        for message in st.session_state.chat_history:
+            display_message(message['human'], "You", "#007bff", right_align=True)
+            display_message(message['AI'], "Aadish", "#28a745", right_align=False)
 
+# Display a single message
+def display_message(text, sender, color, right_align):
+    alignment = 'right' if right_align else 'left'
+    justify_content = 'flex-end' if right_align else 'flex-start'
+    # Escape any HTML characters in the message text
+    escaped_text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+    st.markdown(
+        f"""
+        <div style='display: flex; justify-content: {justify_content}; margin-bottom: 10px;'>
+            <div style='background-color: {color}; padding: 15px; border-radius: 15px; color: white; text-align: {alignment};
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); max-width: 70%; word-wrap: break-word;'>
+                <b>{sender}:</b><br>{escaped_text}
+            </div>
+        </div>
+        """, unsafe_allow_html=True
+    )
+
+# Main application logic
 def main():
-    selected_profile = choose_profile()
-    selected_model = choose_model()
-    memory = initialize_memory(selected_profile['name'])
-    groq_chat = ChatGroq(groq_api_key=GROQ_API_KEY, model_name=selected_model)
-    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    initialize_session_state()
 
-    try:
-        while True:
-            user_input = input("You: ")
-            temperature = 0.8  # Set a default temperature
-            max_tokens = 1024  # Set a default max_tokens
-            prompt = construct_prompt(selected_profile['context'], user_input, CUSTOM_DATA, temperature, max_tokens)
-            conversation = LLMChain(llm=groq_chat, prompt=prompt, verbose=False, memory=memory)
-            response = conversation.predict(human_input=user_input)
-            print("\nLyla:", response, "\n")
-            save_memory(memory, selected_profile['name'])  # Save the conversation after each response
-    except KeyboardInterrupt:
-        save_memory(memory, selected_profile['name'])
+    st.title("Aadish GPT 🤖")
+    st.markdown("Chat with Aadish!")
+
+    if st.button("Clear Chat"):
+        st.session_state.chat_history = []
+        st.session_state.memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
+
+    groq_chat = initialize_groq_chat()
+    if groq_chat is None:
+        return
+
+    conversation = initialize_conversation(groq_chat, st.session_state.memory)
+    if conversation is None:
+        return
+
+    display_chat_history()
+
+    user_question = st.chat_input("What is up?")
+    if user_question:
+        display_message(user_question, "You", "#007bff", right_align=True)
+        with st.spinner("Aadish is typing..."):
+            response = process_user_question(user_question, conversation)
+        display_message(response, "Aadish", "#28a745", right_align=False)
 
 if __name__ == "__main__":
-    logging.basicConfig(filename='conversation_memory.log', level=logging.INFO)
     main()
