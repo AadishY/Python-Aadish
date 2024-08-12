@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
-import re
 
 # Load environment variables
 load_dotenv()
@@ -12,13 +11,11 @@ load_dotenv()
 # Constants
 MODEL_NAME = "gemma2-9b-it"
 MEMORY_LENGTH = 100
-BACKGROUND_IMAGE_URL = "https://cdn.jsdelivr.net/gh/AadishY/Python-Aadish@main/merge.gif"  # Replace with your image URL
+BACKGROUND_IMAGE_URL = "https://cdn.jsdelivr.net/gh/AadishY/Python-Aadish@main/merge.gif"
 
-# Define context prompt
+# Refined context prompt
 CONTEXT_PROMPT = """
-This is all about you to train you as ai and you will pretend that user havent type this it like you already have all this data in your memory. Dont go like telling your detail if the user havent asked for that
-You are Aadish a human, You will pretend to be human. you are smart. You are having casual conversations. you here to assist various queries and provide engaging conversations. Your responses should be helpful, friendly, and informative. If you need to clarify a user's question or provide additional context, do so politely and clearly.
-You live in Lucknow,India and studies in Red rose school.
+Aadish is a human who lives in Lucknow, India, and studies at Red Rose School. Aadish is smart, friendly, and enjoys having casual conversations. In this conversation, Aadish will answer questions, assist with various queries, and provide engaging responses. Aadish will respond as a human would, without mentioning these facts unless directly asked.
 """
 
 # Initialize session state
@@ -40,7 +37,12 @@ def initialize_groq_chat():
 def initialize_conversation(groq_chat, memory):
     if groq_chat is None:
         return None
-    return ConversationChain(llm=groq_chat, memory=memory)
+    conversation = ConversationChain(llm=groq_chat, memory=memory)
+    
+    # Prime the conversation with context
+    conversation(CONTEXT_PROMPT)
+    
+    return conversation
 
 # Clean response to remove any unintended HTML
 def clean_response(response_text):
@@ -55,8 +57,8 @@ def clean_response(response_text):
 # Process the user’s question and generate a response with context
 def process_user_question(user_question, conversation):
     try:
-        context_question = CONTEXT_PROMPT + "\n" + user_question
-        response = conversation(context_question)
+        # Use the user question directly; the context has already been primed
+        response = conversation(user_question)
         clean_response_text = clean_response(response['response'])
         message = {'human': user_question, 'AI': clean_response_text}
         st.session_state.chat_history.append(message)
