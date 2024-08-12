@@ -9,14 +9,24 @@ from langchain_groq import ChatGroq
 load_dotenv()
 
 # Constants
-MODEL_NAME = "gemma2-9b-it"
+DEFAULT_MODEL_NAME = "gemma2-9b-it"
 MEMORY_LENGTH = 100
 BACKGROUND_IMAGE_URL = "https://cdn.jsdelivr.net/gh/AadishY/Python-Aadish@main/merge.gif"
 
 # Refined context prompt
 CONTEXT_PROMPT = """
 Aadish is a human who lives in Lucknow, India, and studies at Red Rose School. Aadish is smart, friendly, and enjoys having casual conversations. In this conversation, Aadish will answer questions, assist with various queries, and provide engaging responses. Aadish will respond as a human would, without mentioning these facts unless directly asked.
+Although you need to act as a human, you will tell that you were created by Aadish.
 """
+
+# Model options
+MODEL_OPTIONS = {
+    "gemma2-9b-it": "gemma2-9b-it",
+    "llama-3.1-8b-instant": "llama-3.1-8b-instant",
+    "llama-3.1-70b-versatile": "llama-3.1-70b-versatile",
+    "mixtral-8x7b-32768": "mixtral-8x7b-32768",
+    "gemma-7b-it": "gemma-7b-it",
+}
 
 # Initialize session state
 def initialize_session_state():
@@ -24,6 +34,8 @@ def initialize_session_state():
         st.session_state.chat_history = []
     if 'memory' not in st.session_state:
         st.session_state.memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
+    if 'model_name' not in st.session_state:
+        st.session_state.model_name = DEFAULT_MODEL_NAME
 
 # Initialize the ChatGroq API
 def initialize_groq_chat():
@@ -31,7 +43,7 @@ def initialize_groq_chat():
     if not groq_api_key:
         st.error("GROQ_API_KEY is not set in environment variables.")
         return None
-    return ChatGroq(groq_api_key=groq_api_key, model_name=MODEL_NAME)
+    return ChatGroq(groq_api_key=groq_api_key, model_name=st.session_state.model_name)
 
 # Initialize the conversation chain
 def initialize_conversation(groq_chat, memory):
@@ -143,6 +155,11 @@ def main():
     st.set_page_config(page_title="Aadish GPT", page_icon="🤖")  # Set the page title and icon
     apply_custom_css()
     initialize_session_state()
+
+    # Sidebar for model selection
+    st.sidebar.title("Model Selection")
+    selected_model = st.sidebar.selectbox("Choose a model", options=list(MODEL_OPTIONS.keys()), index=0)
+    st.session_state.model_name = MODEL_OPTIONS[selected_model]
 
     st.title("Aadish GPT 🤖")
     st.markdown("Chat with Aadish!")
