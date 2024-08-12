@@ -12,12 +12,14 @@ load_dotenv()
 DEFAULT_MODEL_NAME = "gemma2-9b-it"
 MEMORY_LENGTH = 100
 BACKGROUND_IMAGE_URL = "https://cdn.jsdelivr.net/gh/AadishY/Python-Aadish@main/merge.gif"
+ERROR_MESSAGE = "Sorry, something went wrong."
+CHAT_TITLE = "Aadish GPT 🤖"
+CHAT_SUBTITLE = "Chat with Aadish!"
 
 # Refined context prompt
 CONTEXT_PROMPT = """
-Aadish is a human who lives in Lucknow, India, and studies at Red Rose School. Aadish is smart, friendly, and enjoys having casual conversations. In this conversation, Aadish will answer questions, assist with various queries, and provide engaging responses. Aadish will respond as a human would, without mentioning these facts unless directly asked.
-Here Aadish is you
-Although you need to act as a human, you will tell that you were created by Aadish.
+Aadish is a human who lives in Lucknow, India, and studies at Red Rose School. Aadish is smart, friendly, and enjoys having casual conversations. Aadish will answer questions, assist with various queries, and provide engaging responses. Aadish will respond as a human would, without mentioning these facts unless directly asked.
+Your creator is Aadish
 """
 
 # Model options
@@ -51,26 +53,26 @@ def initialize_conversation(groq_chat, memory):
     if groq_chat is None:
         return None
     conversation = ConversationChain(llm=groq_chat, memory=memory)
-    
-    # Prime the conversation with context
-    conversation(CONTEXT_PROMPT)
-    
+    try:
+        # Prime the conversation with context
+        conversation(CONTEXT_PROMPT)
+    except Exception as e:
+        st.error(f"Error initializing conversation: {e}")
+        return None
     return conversation
 
 # Clean response to remove any unintended HTML
 def clean_response(response_text):
-    clean_text = (
+    return (
         response_text.replace('&', '&amp;')
         .replace('<', '&lt;')
         .replace('>', '&gt;')
         .replace('\n', '<br>')  # Handle newlines
     )
-    return clean_text
 
 # Process the user’s question and generate a response with context
 def process_user_question(user_question, conversation):
     try:
-        # Use the user question directly; the context has already been primed
         response = conversation(user_question)
         clean_response_text = clean_response(response['response'])
         message = {'human': user_question, 'AI': clean_response_text}
@@ -78,15 +80,13 @@ def process_user_question(user_question, conversation):
         return clean_response_text
     except Exception as e:
         st.error(f"Error processing question: {e}")
-        return "Sorry, something went wrong."
+        return ERROR_MESSAGE
 
 # Display chat history
 def display_chat_history():
-    chat_display = st.container()
-    with chat_display:
-        for message in st.session_state.chat_history:
-            display_message(message['human'], "You", "#007bff", right_align=True)
-            display_message(message['AI'], "Aadish", "#28a745", right_align=False)
+    for message in st.session_state.chat_history:
+        display_message(message['human'], "You", "#007bff", right_align=True)
+        display_message(message['AI'], "Aadish", "#28a745", right_align=False)
 
 # Display a single message
 def display_message(text, sender, color, right_align):
@@ -153,7 +153,7 @@ def apply_custom_css():
 
 # Main application logic
 def main():
-    st.set_page_config(page_title="Aadish GPT", page_icon="🤖")  # Set the page title and icon
+    st.set_page_config(page_title=CHAT_TITLE, page_icon="🤖")  # Set the page title and icon
     apply_custom_css()
     initialize_session_state()
 
@@ -162,8 +162,8 @@ def main():
     selected_model = st.sidebar.selectbox("Choose a model", options=list(MODEL_OPTIONS.keys()), index=0)
     st.session_state.model_name = MODEL_OPTIONS[selected_model]
 
-    st.title("Aadish GPT 🤖")
-    st.markdown("Chat with Aadish!")
+    st.title(CHAT_TITLE)
+    st.markdown(CHAT_SUBTITLE)
 
     if st.button("Clear Chat"):
         st.session_state.chat_history = []
