@@ -12,5 +12,3 @@ python-dotenv
 requests
 numpy
 
-# Install taesd from the GitHub repository
-git+https://github.com/madebyollin/taesd.git
