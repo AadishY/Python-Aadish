@@ -1,12 +1,14 @@
 import streamlit as st
-import requests
-import os
-import io
+import torch
+from diffusers import StableDiffusion3Pipeline, AutoencoderTiny
 from PIL import Image
-from dotenv import load_dotenv, find_dotenv
+import io
+import requests
 from datetime import datetime
 import re
 import base64
+import os
+from dotenv import load_dotenv, find_dotenv
 
 # Load environment variables from .env file
 load_dotenv(find_dotenv())
@@ -21,28 +23,39 @@ models = {
     "FLUX.1": "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
     "Anime Pfp": "https://api-inference.huggingface.co/models/alvdansen/phantasma-anime",
     "Obama": "https://api-inference.huggingface.co/models/stablediffusionapi/newrealityxl-global-nsfw",
-    "Stable Diffusion 3": "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-3-medium-diffusers",
+    "Stable Diffusion 3": "diffusers/stabilityai/stable-diffusion-3-medium-diffusers",  # Updated model name
 }
 
-# Sidebar for model selection
-selected_model = st.sidebar.selectbox("Choose a model", list(models.keys()))
-API_URL = models[selected_model]
-headers = {"Authorization": f"Bearer {HUGGINGFACEHUB_API_TOKEN}"}
+# Initialize the Stable Diffusion 3 pipeline
+pipe = StableDiffusion3Pipeline.from_pretrained(
+    "stabilityai/stable-diffusion-3-medium-diffusers", torch_dtype=torch.float16
+)
+pipe.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd3", torch_dtype=torch.float16)
+pipe.vae.config.shift_factor = 0.0
+pipe = pipe.to("cuda")
 
 # GitHub repository details
 GITHUB_REPO = "AadishY/Images"  # Replace with your GitHub username/repo
 GITHUB_PATH = "images/"  # Path in the repository to save the images
 GITHUB_BRANCH = "main"  # Branch where images will be saved
 
-def query(payload):
-    response = requests.post(API_URL, headers=headers, json=payload)
+def query_huggingface(payload, api_url):
+    headers = {"Authorization": f"Bearer {HUGGINGFACEHUB_API_TOKEN}"}
+    response = requests.post(api_url, headers=headers, json=payload)
     response.raise_for_status()  # Raises an error for bad responses
     return response.content
 
-def text2image(prompt: str):
-    image_bytes = query({"inputs": prompt})
+def generate_image_huggingface(prompt, api_url):
+    image_bytes = query_huggingface({"inputs": prompt}, api_url)
     image = Image.open(io.BytesIO(image_bytes))
+    return image
 
+def generate_image_diffusers(prompt):
+    with torch.no_grad():
+        image = pipe(prompt).images[0]
+    return image
+
+def save_image_to_github(image, prompt):
     # Use the prompt and date-time for the filename
     safe_prompt = re.sub(r'[^\w\s-]', '', prompt)  # Remove unsafe characters
     safe_prompt = safe_prompt.replace(" ", "_").replace("/", "_")  # Replace spaces and slashes
@@ -92,11 +105,20 @@ st.subheader("Generate images with Aadish")
 # User input text area with placeholder text
 prompt = st.text_area("Enter your prompt here:", placeholder="Enter the prompt concise and Short", height=150)
 
+# Sidebar for model selection
+selected_model = st.sidebar.selectbox("Choose a model", list(models.keys()))
+API_URL = models[selected_model]
+
 # Button to trigger image generation
 if st.button("Enter"):
     if prompt:
         with st.spinner("Aadish is cooking 🧑‍🍳....."):
-            image_url, filename = text2image(prompt)
+            if "Stable Diffusion 3" in selected_model:
+                image = generate_image_diffusers(prompt)
+            else:
+                image = generate_image_huggingface(prompt, API_URL)
+            
+            image_url, filename = save_image_to_github(image, prompt)
             st.success("Image generated and saved to GitHub successfully!")
 
             # Display the image in the Streamlit app
