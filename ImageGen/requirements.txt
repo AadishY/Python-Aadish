@@ -1,13 +1,4 @@
 streamlit
-torch
-torchvision
-torchaudio
-diffusers
-transformers
-accelerate
-scipy
-safetensors
-pillow
-python-dotenv
 requests
-numpy
+Pillow
+python-dotenv
