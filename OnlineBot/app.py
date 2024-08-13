@@ -15,7 +15,7 @@ load_dotenv()
 DEFAULT_MODEL_NAME = "gemma2-9b-it"
 MEMORY_LENGTH = 100
 BACKGROUND_IMAGE_URL = "https://cdn.jsdelivr.net/gh/AadishY/Python-Aadish@main/merge.gif"
-GITHUB_REPO = "username/chatbot-userdata"  # Replace with your repo
+GITHUB_REPO = "AadishY/chatbot-userdata"  # Replace with your repo
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  # Set your GitHub token in the .env file
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/userdata"
 
