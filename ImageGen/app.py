@@ -63,6 +63,12 @@ st.markdown(
     .css-1d391kg {
         display: none; /* Hide the top-right widget and icon */
     }
+    .css-1v3k9fb {
+        display: none; /* Hide the "Share" button */
+    }
+    .css-2mmtk2b {
+        display: none; /* Hide the "Running" indicator */
+    }
     </style>
     """,
     unsafe_allow_html=True
