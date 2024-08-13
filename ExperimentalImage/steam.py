@@ -1,6 +1,6 @@
 import streamlit as st
 import torch
-from diffusers import StableDiffusionPipeline, AutoencoderTiny
+from diffusers import StableDiffusion3Pipeline, AutoencoderTiny
 from PIL import Image
 import io
 import requests
@@ -9,9 +9,6 @@ import re
 import base64
 import os
 from dotenv import load_dotenv, find_dotenv
-import taesd
-import time
-import numpy as np
 
 # Load environment variables from .env file
 load_dotenv(find_dotenv())
@@ -30,69 +27,18 @@ models = {
 }
 
 # Initialize the Stable Diffusion 3 pipeline
-pipe = StableDiffusionPipeline.from_pretrained(
-    "stabilityai/stable-diffusion-3-medium-diffusers", torch_dtype=None if torch.backends.mps.is_available() else torch.float16
+pipe = StableDiffusion3Pipeline.from_pretrained(
+    "stabilityai/stable-diffusion-3-medium-diffusers", torch_dtype=torch.float16
 )
 pipe.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd3", torch_dtype=torch.float16)
 pipe.vae.config.shift_factor = 0.0
-device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
-pipe = pipe.to(device)
-pipe.enable_attention_slicing()
+pipe = pipe.to("cuda")
 
 # GitHub repository details
 GITHUB_REPO = "AadishY/Images"  # Replace with your GitHub username/repo
 GITHUB_PATH = "images/"  # Path in the repository to save the images
 GITHUB_BRANCH = "main"  # Branch where images will be saved
 
-# TAESD setup
-taesd_dec = taesd.Decoder().to(device).requires_grad_(False)
-taesd_dec.load_state_dict(torch.load("taesd_decoder.pth", map_location=device))
-
-def get_pred_original_sample(sched, model_output, timestep, sample):
-    alpha_prod_t = sched.alphas_cumprod[timestep]
-    return (sample - (1 - alpha_prod_t) ** 0.5 * model_output) / alpha_prod_t ** 0.5
-
-preview_images = []
-preview_handle = None
-
-def add_taesd_previewing(pipe, taesd_dec):
-    sched = pipe.scheduler
-    if not hasattr(sched, "_step"):
-        sched._step = sched.step
-    @torch.no_grad()
-    def step_and_preview(*args, **kwargs):
-        global preview_images, preview_handle
-        latents = get_pred_original_sample(sched, *args)
-        decoded = pipe.image_processor.postprocess(taesd_dec(latents.float()).mul_(2).sub_(1))[0]
-        preview_images.append(decoded)
-        if preview_handle is None:
-            preview_handle = display(decoded, display_id=True)
-        else:
-            preview_handle.update(decoded)
-        return sched._step(*args, **kwargs)
-    sched.step = step_and_preview
-
-add_taesd_previewing(pipe, taesd_dec)
-
-@torch.no_grad()
-def add_final_speed_comparison(pipe, taesd_dec):
-    if not hasattr(pipe.vae, "_decode"):
-        pipe.vae._decode = pipe.vae.decode
-    def decode_latents_and_compare_speeds(latents, *args, **kwargs):
-        tick_sd = time.time()
-        res_sd = pipe.vae._decode(latents, *args, **kwargs)[0].cpu()
-        tock_sd = tick_taesd = time.time()
-        res_taesd = taesd_dec(latents.mul(pipe.vae.config.scaling_factor)).mul_(2).sub_(1).cpu()
-        tock_taesd = time.time()
-        print("To decode these latents")
-        display(Image.fromarray(latents[0, :3].mul(0.25).add(0.5).clamp(0, 1).mul(255).round().byte().permute(1, 2, 0).cpu().numpy()))
-        print(f"SD-VAE (left) takes \033[34m{tock_sd - tick_sd:.4f}s\033[0m; TAESD (right) takes \033[36m{tock_taesd - tick_taesd:.4f}s\033[0m")
-        return (torch.cat([res_sd, res_taesd], -1),)
-    pipe.vae.decode = decode_latents_and_compare_speeds
-
-add_final_speed_comparison(pipe, taesd_dec)
-
-# Function to query Hugging Face API
 def query_huggingface(payload, api_url):
     headers = {"Authorization": f"Bearer {HUGGINGFACEHUB_API_TOKEN}"}
     response = requests.post(api_url, headers=headers, json=payload)
@@ -106,9 +52,7 @@ def generate_image_huggingface(prompt, api_url):
 
 def generate_image_diffusers(prompt):
     with torch.no_grad():
-        preview_images.clear()
-        preview_handle = None
-        generator = torch.Generator(device).manual_seed(0x7AE5D12)
+        generator = torch.Generator("cuda").manual_seed(0x7AE5D12)
         image = pipe(prompt, num_inference_steps=25, height=512, width=512, guidance_scale=3.0, generator=generator).images[0]
     return image
 
@@ -189,9 +133,3 @@ if st.button("Enter"):
 
     else:
         st.warning("Please enter a prompt before clicking 'Enter'.")
-
-# Save preview images as GIF
-if preview_images:
-    preview_images[0].save("images/preview_images_1.gif", save_all=True, append_images=preview_images[1:], duration=100, loop=0)
-    gif_url = f"https://raw.githubusercontent.com/{GITHUB_REPO}/{GITHUB_BRANCH}/{GITHUB_PATH}preview_images_1.gif"
-    st.markdown(f"![Preview GIF]({gif_url})")
