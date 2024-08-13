@@ -1,10 +1,12 @@
 import os
+import json
+import base64
+import requests
 import streamlit as st
 from dotenv import load_dotenv
 from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
-import json
 
 # Load environment variables
 load_dotenv()
@@ -13,7 +15,9 @@ load_dotenv()
 DEFAULT_MODEL_NAME = "gemma2-9b-it"
 MEMORY_LENGTH = 100
 BACKGROUND_IMAGE_URL = "https://cdn.jsdelivr.net/gh/AadishY/Python-Aadish@main/merge.gif"
-USER_DATA_DIR = "user_data"
+GITHUB_REPO = "username/chatbot-userdata"  # Replace with your repo
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  # Set your GitHub token in the .env file
+GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/userdata"
 
 # Refined context prompt
 CONTEXT_PROMPT = """
@@ -77,39 +81,74 @@ def initialize_conversation(groq_chat, memory):
     conversation(CONTEXT_PROMPT)
     return conversation
 
-# Save chat history to a file
+# GitHub API: Get file content
+def get_github_file_content(filepath):
+    url = f"{GITHUB_API_URL}/{filepath}"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        content = response.json()["content"]
+        return base64.b64decode(content).decode("utf-8")
+    elif response.status_code == 404:
+        return None
+    else:
+        st.error("Error fetching data from GitHub.")
+        return None
+
+# GitHub API: Save file content
+def save_github_file_content(filepath, content):
+    url = f"{GITHUB_API_URL}/{filepath}"
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "message": f"Update {filepath}",
+        "content": base64.b64encode(content.encode("utf-8")).decode("utf-8"),
+        "branch": "main"
+    }
+    existing_file = get_github_file_content(filepath)
+    if existing_file is not None:
+        # If file exists, include the SHA to update it
+        sha = requests.get(url, headers=headers).json()["sha"]
+        data["sha"] = sha
+    response = requests.put(url, headers=headers, json=data)
+    if response.status_code not in [200, 201]:
+        st.error(f"Error saving data to GitHub: {response.status_code}")
+
+# Save chat history to GitHub
 def save_chat_history():
     if st.session_state.username:
-        file_path = os.path.join(USER_DATA_DIR, f"{st.session_state.username}_chat_history.json")
-        with open(file_path, 'w') as f:
-            json.dump(st.session_state.chat_history, f)
+        filepath = f"{st.session_state.username}_chat_history.json"
+        content = json.dumps(st.session_state.chat_history)
+        save_github_file_content(filepath, content)
 
-# Load chat history from a file
+# Load chat history from GitHub
 def load_chat_history():
     if st.session_state.username:
-        file_path = os.path.join(USER_DATA_DIR, f"{st.session_state.username}_chat_history.json")
-        if os.path.exists(file_path):
-            with open(file_path, 'r') as f:
-                return json.load(f)
+        filepath = f"{st.session_state.username}_chat_history.json"
+        content = get_github_file_content(filepath)
+        if content:
+            return json.loads(content)
     return []
 
-# Save conversation memory to a file
+# Save conversation memory to GitHub
 def save_memory():
     if st.session_state.username:
-        file_path = os.path.join(USER_DATA_DIR, f"{st.session_state.username}_memory.json")
+        filepath = f"{st.session_state.username}_memory.json"
         memory_data = {
             "buffer": st.session_state.memory.buffer
         }
-        with open(file_path, 'w') as f:
-            json.dump(memory_data, f)
+        content = json.dumps(memory_data)
+        save_github_file_content(filepath, content)
 
-# Load conversation memory from a file
+# Load conversation memory from GitHub
 def load_memory():
     if st.session_state.username:
-        file_path = os.path.join(USER_DATA_DIR, f"{st.session_state.username}_memory.json")
-        if os.path.exists(file_path):
-            with open(file_path, 'r') as f:
-                memory_data = json.load(f)
+        filepath = f"{st.session_state.username}_memory.json"
+        content = get_github_file_content(filepath)
+        if content:
+            memory_data = json.loads(content)
             memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
             memory.buffer = memory_data.get("buffer", [])
             return memory
@@ -128,7 +167,6 @@ def clean_response(response_text):
 # Process the user’s question and generate a response with context
 def process_user_question(user_question, conversation):
     try:
-        # Use the user question directly; the context has already been primed
         response = conversation(user_question)
         clean_response_text = clean_response(response['response'])
         message = {'human': user_question, 'AI': clean_response_text}
@@ -161,6 +199,7 @@ def display_message(text, sender, color, right_align):
         </div>
     </div>
     """
+
     
     st.markdown(message_html, unsafe_allow_html=True)
 
