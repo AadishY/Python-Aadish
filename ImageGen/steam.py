@@ -6,12 +6,14 @@ from PIL import Image
 from dotenv import load_dotenv, find_dotenv
 from datetime import datetime
 import re
+import base64
 
 # Load environment variables from .env file
 load_dotenv(find_dotenv())
 
-# Retrieve the Hugging Face API token from the environment variable
+# Retrieve the Hugging Face API token and GitHub PAT from environment variables
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 # Define models and their API URLs
 models = {
@@ -26,6 +28,11 @@ selected_model = st.sidebar.selectbox("Choose a model", list(models.keys()))
 API_URL = models[selected_model]
 headers = {"Authorization": f"Bearer {HUGGINGFACEHUB_API_TOKEN}"}
 
+# GitHub repository details
+GITHUB_REPO = "AadishY/Images"  # Replace with your GitHub username/repo
+GITHUB_PATH = "images/"  # Path in the repository to save the images
+GITHUB_BRANCH = "main"  # Branch where images will be saved
+
 def query(payload):
     response = requests.post(API_URL, headers=headers, json=payload)
     response.raise_for_status()  # Raises an error for bad responses
@@ -35,27 +42,33 @@ def text2image(prompt: str):
     image_bytes = query({"inputs": prompt})
     image = Image.open(io.BytesIO(image_bytes))
 
-    # Create the directory if it doesn't exist
-    save_dir = "Appimage 1"
-    os.makedirs(save_dir, exist_ok=True)
-
     # Use the prompt and date-time for the filename
     safe_prompt = re.sub(r'[^\w\s-]', '', prompt)  # Remove unsafe characters
     safe_prompt = safe_prompt.replace(" ", "_").replace("/", "_")  # Replace spaces and slashes
     safe_prompt = re.sub(r'[\n\r\t]', '', safe_prompt)  # Remove newlines and tabs
     date_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")  # Include time in the date string
-    filename = f"{save_dir}/{safe_prompt}_{date_str}.jpg"
+    filename = f"{safe_prompt}_{date_str}.jpg"
     
-    # Ensure filename is valid by removing other invalid characters
-    filename = re.sub(r'[\\/*?:"<>|]', "", filename)  # Remove invalid characters
-    image.save(filename)
+    # Convert image to base64
+    buffered = io.BytesIO()
+    image.save(buffered, format="JPEG")
+    img_str = base64.b64encode(buffered.getvalue()).decode()
 
-    # Create a downloadable file with the name 'Aadish_YYYY-MM-DD_HH-MM-SS.jpg'
-    download_filename = f"Aadish_{date_str}.jpg"
-    with open(filename, "rb") as f:
-        file_content = f.read()
-
-    return file_content, download_filename
+    # Create the GitHub API URL
+    github_api_url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_PATH}{filename}"
+    
+    # Prepare the data for the GitHub API
+    data = {
+        "message": f"Add image {filename}",
+        "content": img_str,
+        "branch": GITHUB_BRANCH,
+    }
+    
+    # Send the request to GitHub API
+    response = requests.put(github_api_url, headers={"Authorization": f"token {GITHUB_TOKEN}"}, json=data)
+    response.raise_for_status()  # Check if the request was successful
+    
+    return response.json()["content"]["download_url"], filename
 
 # Streamlit app
 st.markdown(
@@ -82,25 +95,18 @@ prompt = st.text_area("Enter your prompt here:", placeholder="Enter the prompt c
 if st.button("Enter"):
     if prompt:
         with st.spinner("Aadish is cooking 🧑‍🍳....."):
-            image_content, download_filename = text2image(prompt)
-            st.success("Image generated successfully!")
+            image_url, filename = text2image(prompt)
+            st.success("Image generated and saved to GitHub successfully!")
 
             # Display the image in the Streamlit app
-            st.image(io.BytesIO(image_content), caption="Cooked Image by Aadish", use_column_width=True)
+            st.image(image_url, caption="Cooked Image by Aadish", use_column_width=True)
 
-            # Create a container to layout the download button and prompt side by side
-            col1, col2 = st.columns([2, 3])  # Adjust the ratio as needed
-            
-            with col1:
-                st.download_button(
-                    label="Download Image",
-                    data=image_content,
-                    file_name=download_filename,
-                    mime="image/jpeg"
-                )
-                
-            with col2:
-                st.write(f"Prompt used: {prompt}")
+            # Provide a link to download the image
+            st.markdown(f"[Download Image]({image_url})")
+
+            # Display the prompt used
+            st.write(f"Prompt used: {prompt}")
 
     else:
         st.warning("Please enter a prompt before clicking 'Enter'.")
+
