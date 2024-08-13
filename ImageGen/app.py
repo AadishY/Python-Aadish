@@ -3,12 +3,12 @@ import requests
 import os
 import io
 from PIL import Image
-from dotenv import load_dotenv, find_env
+from dotenv import load_dotenv, find_dotenv
 from datetime import datetime
 import re
 
 # Load environment variables from .env file
-load_dotenv(find_env())
+load_dotenv(find_dotenv())
 
 # Retrieve the Hugging Face API token from the environment variable
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
