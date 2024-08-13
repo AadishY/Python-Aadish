@@ -1,22 +1,75 @@
 import streamlit as st
-import torch
-from diffusers import StableDiffusion3Pipeline
-from PIL import Image
+import requests
+import os
 import io
+from PIL import Image
+from dotenv import load_dotenv, find_dotenv
+from datetime import datetime
+import re
 import base64
 
-# Initialize the Stable Diffusion 3 pipeline
-pipe = StableDiffusion3Pipeline.from_pretrained(
-    "stabilityai/stable-diffusion-3-medium-diffusers", torch_dtype=torch.float16
-)
-pipe = pipe.to("cuda")
+# Load environment variables from .env file
+load_dotenv(find_dotenv())
 
-# Function to generate image using the diffusion model
-def generate_image_diffusers(prompt):
-    with torch.no_grad():
-        generator = torch.Generator("cuda").manual_seed(0x7AE5D12)
-        image = pipe(prompt, num_inference_steps=25, height=512, width=512, guidance_scale=3.0, generator=generator).images[0]
-    return image
+# Retrieve the Hugging Face API token and GitHub PAT from environment variables
+HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+
+# Define models and their API URLs
+models = {
+    "Stable Diffusion v1.5": "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5",
+    "FLUX.1": "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
+    "Anime Pfp": "https://api-inference.huggingface.co/models/alvdansen/phantasma-anime",
+    "Obama": "https://api-inference.huggingface.co/models/stablediffusionapi/newrealityxl-global-nsfw",
+    "Stable Diffusion 3": "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-3-medium-diffusers",
+}
+
+# Sidebar for model selection
+selected_model = st.sidebar.selectbox("Choose a model", list(models.keys()))
+API_URL = models[selected_model]
+headers = {"Authorization": f"Bearer {HUGGINGFACEHUB_API_TOKEN}"}
+
+# GitHub repository details
+GITHUB_REPO = "AadishY/Images"  # Replace with your GitHub username/repo
+GITHUB_PATH = "images/"  # Path in the repository to save the images
+GITHUB_BRANCH = "main"  # Branch where images will be saved
+
+def query(payload):
+    response = requests.post(API_URL, headers=headers, json=payload)
+    response.raise_for_status()  # Raises an error for bad responses
+    return response.content
+
+def text2image(prompt: str):
+    image_bytes = query({"inputs": prompt})
+    image = Image.open(io.BytesIO(image_bytes))
+
+    # Use the prompt and date-time for the filename
+    safe_prompt = re.sub(r'[^\w\s-]', '', prompt)  # Remove unsafe characters
+    safe_prompt = safe_prompt.replace(" ", "_").replace("/", "_")  # Replace spaces and slashes
+    safe_prompt = re.sub(r'[\n\r\t]', '', safe_prompt)  # Remove newlines and tabs
+    date_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")  # Include time in the date string
+    filename = f"{safe_prompt}_{date_str}.jpg"
+    
+    # Convert image to base64
+    buffered = io.BytesIO()
+    image.save(buffered, format="JPEG")
+    img_str = base64.b64encode(buffered.getvalue()).decode()
+
+    # Create the GitHub API URL
+    github_api_url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_PATH}{filename}"
+    
+    # Prepare the data for the GitHub API
+    data = {
+        "message": f"Add image {filename}",
+        "content": img_str,
+        "branch": GITHUB_BRANCH,
+    }
+    
+    # Send the request to GitHub API
+    response = requests.put(github_api_url, headers={"Authorization": f"token {GITHUB_TOKEN}"}, json=data)
+    response.raise_for_status()  # Check if the request was successful
+    
+    return response.json()["content"]["download_url"], filename
 
 # Streamlit app
 st.markdown(
@@ -43,17 +96,14 @@ prompt = st.text_area("Enter your prompt here:", placeholder="Enter the prompt c
 if st.button("Enter"):
     if prompt:
         with st.spinner("Aadish is cooking 🧑‍🍳....."):
-            image = generate_image_diffusers(prompt)
-            
-            # Save and display the generated image
-            buffered = io.BytesIO()
-            image.save(buffered, format="PNG")
-            img_str = base64.b64encode(buffered.getvalue()).decode()
+            image_url, filename = text2image(prompt)
+            st.success("Image generated and saved to GitHub successfully!")
 
-            st.image(image, caption="Cooked Image by Aadish", use_column_width=True)
+            # Display the image in the Streamlit app
+            st.image(image_url, caption="Cooked Image by Aadish", use_column_width=True)
 
             # Provide a link to download the image
-            st.markdown(f"[Download Image](data:image/png;base64,{img_str})")
+            st.markdown(f"[Download Image]({image_url})")
 
             # Display the prompt used
             st.write(f"Prompt used: {prompt}")
