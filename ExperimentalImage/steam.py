@@ -22,6 +22,7 @@ models = {
     "Anime Pfp": "https://api-inference.huggingface.co/models/alvdansen/phantasma-anime",
     "Obama": "https://api-inference.huggingface.co/models/stablediffusionapi/newrealityxl-global-nsfw",
     "Stable Diffusion 3": "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-3-medium-diffusers",
+    "Clandestine XL 1.0": "https://api-inference.huggingface.co/models/yodayo-ai/clandestine-xl-1.0",
 }
 
 # Sidebar for model selection
