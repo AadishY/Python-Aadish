@@ -1,7 +1,7 @@
 streamlit
 openai
 python-dotenv
-diffusers==0.10.2
+diffusers
 transformers 
 scipy 
 ftfy 
