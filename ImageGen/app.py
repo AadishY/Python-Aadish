@@ -13,7 +13,7 @@ load_dotenv(find_dotenv())
 
 # GitHub Configuration
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-GITHUB_REPO = "your-username/your-repository"
+GITHUB_REPO = "AadishY/Images"
 GITHUB_BRANCH = "main"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/"
 
