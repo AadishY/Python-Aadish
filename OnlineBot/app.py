@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
+import json
 
 # Load environment variables
 load_dotenv()
@@ -12,8 +13,9 @@ load_dotenv()
 DEFAULT_MODEL_NAME = "gemma2-9b-it"
 MEMORY_LENGTH = 100
 BACKGROUND_IMAGE_URL = "https://cdn.jsdelivr.net/gh/AadishY/Python-Aadish@main/merge.gif"
+USER_DATA_DIR = "user_data"
 
-# Refined context prompt with detailed instructions
+# Refined context prompt
 CONTEXT_PROMPT = """
 You are Lyla, an advanced conversational AI created by Aadish. Your purpose is to provide helpful, thoughtful, and contextually relevant responses. 
 When answering questions, always be respectful, friendly, and professional. You should prioritize clarity, precision, and relevance in your replies.
@@ -34,11 +36,29 @@ MODEL_OPTIONS = {
 # Initialize session state
 def initialize_session_state():
     if 'chat_history' not in st.session_state:
-        st.session_state.chat_history = []
+        st.session_state.chat_history = load_chat_history()
     if 'memory' not in st.session_state:
-        st.session_state.memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
+        st.session_state.memory = load_memory()
     if 'model_name' not in st.session_state:
         st.session_state.model_name = DEFAULT_MODEL_NAME
+    if 'logged_in' not in st.session_state:
+        st.session_state.logged_in = False
+    if 'username' not in st.session_state:
+        st.session_state.username = None
+
+# Handle user login
+def login(username):
+    st.session_state.username = username
+    st.session_state.logged_in = True
+    st.session_state.chat_history = load_chat_history()
+    st.session_state.memory = load_memory()
+
+# Logout the user
+def logout():
+    st.session_state.logged_in = False
+    st.session_state.username = None
+    st.session_state.chat_history = []
+    st.session_state.memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
 
 # Initialize the ChatGroq API
 def initialize_groq_chat():
@@ -56,6 +76,44 @@ def initialize_conversation(groq_chat, memory):
     # Prime the conversation with context
     conversation(CONTEXT_PROMPT)
     return conversation
+
+# Save chat history to a file
+def save_chat_history():
+    if st.session_state.username:
+        file_path = os.path.join(USER_DATA_DIR, f"{st.session_state.username}_chat_history.json")
+        with open(file_path, 'w') as f:
+            json.dump(st.session_state.chat_history, f)
+
+# Load chat history from a file
+def load_chat_history():
+    if st.session_state.username:
+        file_path = os.path.join(USER_DATA_DIR, f"{st.session_state.username}_chat_history.json")
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as f:
+                return json.load(f)
+    return []
+
+# Save conversation memory to a file
+def save_memory():
+    if st.session_state.username:
+        file_path = os.path.join(USER_DATA_DIR, f"{st.session_state.username}_memory.json")
+        memory_data = {
+            "buffer": st.session_state.memory.buffer
+        }
+        with open(file_path, 'w') as f:
+            json.dump(memory_data, f)
+
+# Load conversation memory from a file
+def load_memory():
+    if st.session_state.username:
+        file_path = os.path.join(USER_DATA_DIR, f"{st.session_state.username}_memory.json")
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as f:
+                memory_data = json.load(f)
+            memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
+            memory.buffer = memory_data.get("buffer", [])
+            return memory
+    return ConversationBufferWindowMemory(k=MEMORY_LENGTH)
 
 # Clean response to remove any unintended HTML
 def clean_response(response_text):
@@ -75,6 +133,8 @@ def process_user_question(user_question, conversation):
         clean_response_text = clean_response(response['response'])
         message = {'human': user_question, 'AI': clean_response_text}
         st.session_state.chat_history.append(message)
+        save_chat_history()  # Save chat history after each interaction
+        save_memory()  # Save memory after each interaction
         return clean_response_text
     except Exception as e:
         st.error(f"Error processing question: {e}")
@@ -151,23 +211,42 @@ def apply_custom_css():
     <meta name="description" content="Chat with Aadish GPT for an engaging conversation experience.">
     """, unsafe_allow_html=True)
 
+# Handle user login interface
+def user_login():
+    st.title("Aadish GPT 🤖 Login")
+    username = st.text_input("Enter your username:")
+    if st.button("Login"):
+        if username:
+            login(username)
+        else:
+            st.error("Please enter a username.")
+
 # Main application logic
 def main():
     st.set_page_config(page_title="Aadish GPT", page_icon="🤖")  # Set the page title and icon
     apply_custom_css()
     initialize_session_state()
 
-    # Sidebar for model selection
+    if not st.session_state.logged_in:
+        user_login()
+        return
+
+    # Sidebar for model selection and logout
     st.sidebar.title("Model Selection")
     selected_model = st.sidebar.selectbox("Choose a model", options=list(MODEL_OPTIONS.keys()), index=0)
     st.session_state.model_name = MODEL_OPTIONS[selected_model]
 
-    st.title("Aadish GPT 🤖")
+    if st.sidebar.button("Logout"):
+        logout()
+
+    st.title(f"Aadish GPT 🤖 - Welcome, {st.session_state.username}")
     st.markdown("Chat with Lyla!")
 
     if st.button("Clear Chat"):
         st.session_state.chat_history = []
         st.session_state.memory = ConversationBufferWindowMemory(k=MEMORY_LENGTH)
+        save_chat_history()  # Clear the saved chat history
+        save_memory()  # Clear the saved memory
 
     groq_chat = initialize_groq_chat()
     if groq_chat is None:
