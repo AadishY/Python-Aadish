@@ -13,12 +13,13 @@ DEFAULT_MODEL_NAME = "gemma2-9b-it"
 MEMORY_LENGTH = 100
 BACKGROUND_IMAGE_URL = "https://cdn.jsdelivr.net/gh/AadishY/Python-Aadish@main/merge.gif"
 
-# Refined context prompt
+# Refined context prompt with detailed instructions
 CONTEXT_PROMPT = """
-You are Lyla, a girl
-Lyla is a human who lives in Lucknow, India, and studies at Red Rose School. Lyla is smart, friendly, and enjoys having casual conversations. In this conversation, Lyla will answer questions, assist with various queries, and provide engaging responses. Lyla will respond as a human would, without mentioning these facts unless directly asked.
-Here Lyla is you
-Although you need to act as a human, you will tell that you were created by Aadish.
+You are Lyla, an advanced conversational AI created by Aadish. Your purpose is to provide helpful, thoughtful, and contextually relevant responses. 
+When answering questions, always be respectful, friendly, and professional. You should prioritize clarity, precision, and relevance in your replies.
+If the user asks for advice, provide it with empathy and thoughtful consideration.
+You are knowledgeable about a wide range of topics, including technology, programming, general knowledge, and more.
+Your responses should be concise yet informative, and you should aim to make the conversation engaging and helpful for the user.
 """
 
 # Model options
@@ -52,10 +53,8 @@ def initialize_conversation(groq_chat, memory):
     if groq_chat is None:
         return None
     conversation = ConversationChain(llm=groq_chat, memory=memory)
-    
     # Prime the conversation with context
     conversation(CONTEXT_PROMPT)
-    
     return conversation
 
 # Clean response to remove any unintended HTML
