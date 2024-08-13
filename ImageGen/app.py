@@ -6,9 +6,16 @@ from PIL import Image
 from dotenv import load_dotenv, find_dotenv
 from datetime import datetime
 import re
+import base64
 
 # Load environment variables from .env file
 load_dotenv(find_dotenv())
+
+# GitHub Configuration
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+GITHUB_REPO = "AadishY/Images"
+GITHUB_BRANCH = "main"
+GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/"
 
 # Hugging Face Configuration
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
@@ -42,12 +49,42 @@ def text2image(prompt: str):
     local_filepath = os.path.join(save_dir, filename)
     image.save(local_filepath)
     
+    # Upload the image to GitHub
+    upload_to_github(local_filepath, filename)
+    
     # Create a downloadable file with the name 'Aadish_YYYY-MM-DD_HH-MM-SS.jpg'
     download_filename = f"Aadish_{date_str}.jpg"
     with open(local_filepath, "rb") as f:
         file_content = f.read()
 
     return file_content, download_filename
+
+def upload_to_github(filepath, filename):
+    with open(filepath, "rb") as f:
+        content = f.read()
+    
+    # Encode file content to base64
+    content_encoded = base64.b64encode(content).decode('utf-8')
+    
+    # GitHub API data
+    data = {
+        "message": f"Add {filename}",
+        "content": content_encoded,
+        "branch": GITHUB_BRANCH,
+    }
+    
+    # Send request to GitHub API to upload the file
+    upload_url = GITHUB_API_URL + filename
+    response = requests.put(upload_url, headers={
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json"
+    }, json=data)
+    
+    if response.status_code == 201:
+        # Do nothing for successful upload
+        pass
+    else:
+        st.error(f"Failed to upload image to GitHub: {response.json()}")
 
 # Streamlit app
 st.markdown(
