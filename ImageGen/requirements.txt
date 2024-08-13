@@ -1,11 +1,14 @@
 streamlit
-torch torchvision torchaudio
+torch
+torchvision
+torchaudio
 diffusers
 transformers
 accelerate
 scipy
-psafetensors
+safetensors
 taesd
 pillow
 python-dotenv
 requests
+numpy
