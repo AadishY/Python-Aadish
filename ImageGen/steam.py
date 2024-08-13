@@ -1,6 +1,6 @@
 import streamlit as st
 import torch
-from diffusers import StableDiffusion3Pipeline, AutoencoderTiny
+from diffusers import StableDiffusionPipeline, AutoencoderTiny
 from PIL import Image
 import io
 import requests
@@ -27,7 +27,7 @@ models = {
 }
 
 # Initialize the Stable Diffusion 3 pipeline
-pipe = StableDiffusion3Pipeline.from_pretrained(
+pipe = StableDiffusionPipeline.from_pretrained(
     "stabilityai/stable-diffusion-3-medium-diffusers", torch_dtype=torch.float16
 )
 pipe.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd3", torch_dtype=torch.float16)
