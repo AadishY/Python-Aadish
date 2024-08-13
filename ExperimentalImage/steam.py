@@ -16,6 +16,7 @@ HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 # Define models and their API URLs
+# Define models and their API URLs
 models = {
     "Stable Diffusion v1.5": "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5",
     "FLUX.1": "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
@@ -24,7 +25,11 @@ models = {
     "Stable Diffusion 3": "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-3-medium-diffusers",
     "Clandestine XL 1.0": "https://api-inference.huggingface.co/models/yodayo-ai/clandestine-xl-1.0",
     "Animagine XL 3.1": "https://api-inference.huggingface.co/models/cagliostrolab/animagine-xl-3.1",
+    "ICantBelieveItSNotPhotography": "https://api-inference.huggingface.co/models/Yntec/ICantBelieveItSNotPhotography",
+    "DreamlikePhotoReal2": "https://api-inference.huggingface.co/models/Yntec/DreamlikePhotoReal2",
+    "beLIEve": "https://api-inference.huggingface.co/models/Yntec/beLIEve",
 }
+
 
 # Sidebar for model selection
 selected_model = st.sidebar.selectbox("Choose a model", list(models.keys()))
