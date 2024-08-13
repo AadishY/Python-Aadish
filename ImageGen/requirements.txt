@@ -7,7 +7,6 @@ transformers
 accelerate
 scipy
 safetensors
-taesd
 pillow
 python-dotenv
 requests
