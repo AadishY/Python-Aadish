@@ -1,15 +1,11 @@
 streamlit
-openai
-python-dotenv
+torch torchvision torchaudio
 diffusers
-transformers 
-scipy 
-ftfy 
+transformers
 accelerate
-requests
-Pillow
-torch
-io
-datetime
+scipy
+psafetensors
 taesd
-numpy
+pillow
+python-dotenv
+requests
