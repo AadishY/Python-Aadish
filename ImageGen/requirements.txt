@@ -6,3 +6,5 @@ transformers
 scipy 
 ftfy 
 accelerate
+requests
+Pillow
