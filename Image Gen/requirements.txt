@@ -1,8 +1,0 @@
-streamlit
-openai
-python-dotenv
-diffusers==0.10.2
-transformers 
-scipy 
-ftfy 
-accelerate
