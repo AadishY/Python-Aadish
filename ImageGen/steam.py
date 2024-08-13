@@ -21,6 +21,7 @@ models = {
     "FLUX.1": "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
     "Anime Pfp": "https://api-inference.huggingface.co/models/alvdansen/phantasma-anime",
     "Obama": "https://api-inference.huggingface.co/models/stablediffusionapi/newrealityxl-global-nsfw",
+    "Stable Diffusion 3": "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-3-medium-diffusers",
 }
 
 # Sidebar for model selection
@@ -109,4 +110,3 @@ if st.button("Enter"):
 
     else:
         st.warning("Please enter a prompt before clicking 'Enter'.")
-
