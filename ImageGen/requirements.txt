@@ -9,3 +9,7 @@ accelerate
 requests
 Pillow
 torch
+io
+datetime
+taesd
+numpy
