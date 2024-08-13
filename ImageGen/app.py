@@ -94,6 +94,10 @@ st.markdown(
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
+        height: 100vh;  /* Full viewport height */
+    }
+    .css-1d391kg {
+        display: none; /* Hide the top-right widget and icon */
     }
     </style>
     """,
