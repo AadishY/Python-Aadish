@@ -45,13 +45,7 @@ def initialize_groq_chat(groq_api_key, model):
     """
     return ChatGroq(
         groq_api_key=groq_api_key,
-        model_name=model,
-        messages=[  # Adding system role message
-            {
-                "role": "system",
-                "content": "You are AadishGPT, a helpful assistant created by Aadish."
-            }
-        ]
+        model_name=model
     )
 
 def initialize_conversation(groq_chat, memory):
@@ -67,6 +61,14 @@ def process_user_question(user_question, conversation):
     """
     Process the user's question and generate a response using the conversation chain.
     """
+    # Add a system role message manually
+    system_message = {
+        "role": "system",
+        "content": "You are AadishGPT, a helpful assistant created by Aadish."
+    }
+
+    # Inject the system message at the beginning
+    conversation.memory.chat_memory.add_user_message(system_message["content"])
     response = conversation(user_question)
     message = {'human': user_question, 'AI': response['response']}
     st.session_state.chat_history.append(message)
