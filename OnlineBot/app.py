@@ -4,6 +4,7 @@ from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
 import dotenv
+
 dotenv.load_dotenv(dotenv.find_dotenv())
 
 # Set page configuration
@@ -18,15 +19,39 @@ def initialize_session_state():
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
     if 'model' not in st.session_state:
-        st.session_state.model = 'llama3-70b-8192'
+        st.session_state.model = 'gemma2-9b-it'  # Default model
+
+def display_customization_options():
+    """
+    Add customization options to the sidebar for model selection.
+    """
+    st.sidebar.title('Customization')
+    model = st.sidebar.selectbox(
+        'Choose a model',
+        ['gemma2-9b-it', 'llama-3.1-8b-instant', 'llama-3.1-70b-versatile', 'mixtral-8x7b-32768'],
+        key='model_selectbox'
+    )
+    
+    # Clear chat option
+    if st.sidebar.button("Clear Chat"):
+        st.session_state.chat_history = []
+        st.experimental_rerun()
+        
+    return model
 
 def initialize_groq_chat(groq_api_key, model):
     """
-    Initialize the Groq Langchain chat object.
+    Initialize the Groq Langchain chat object with a system message.
     """
     return ChatGroq(
         groq_api_key=groq_api_key,
-        model_name=model
+        model_name=model,
+        messages=[  # Adding system role message
+            {
+                "role": "system",
+                "content": "You are AadishGPT, a helpful assistant created by Aadish."
+            }
+        ]
     )
 
 def initialize_conversation(groq_chat, memory):
@@ -68,7 +93,16 @@ def main():
     )
 
     st.title("Aadish GPT 🤖")
-    st.markdown("Chat with Lyla, made by Aadish!")
+    st.markdown("Chat with Aadish!")
+
+    # Display customization options and get the selected model
+    model = display_customization_options()
+
+    # Update session state if model changes
+    if st.session_state.model != model:
+        st.session_state.chat_history = []
+        st.session_state.model = model
+        st.experimental_rerun()
 
     # Conversational memory length is now fixed at 10
     memory = ConversationBufferWindowMemory(k=10)
@@ -77,19 +111,20 @@ def main():
 
     if user_question := st.chat_input("What is up?"):
         st.session_state.chat_history.append({"human": user_question, "AI": ""})
-        with st.chat_message("user"):
-            st.markdown(user_question)
-
-        for message in st.session_state.chat_history[:-1]:  # Show all previous messages
-            with st.chat_message("assistant"):
-                st.markdown(f"**User:** {message['human']}")
-                st.markdown(f"**Aadish GPT 🤖:** {message['AI']}")
-
         groq_chat = initialize_groq_chat(groq_api_key, st.session_state.model)
         conversation = initialize_conversation(groq_chat, memory)
 
+        # Display previous messages correctly
+        for message in st.session_state.chat_history[:-1]:  # Show all previous messages
+            with st.chat_message("user"):
+                st.markdown(message['human'])
+            with st.chat_message("assistant"):
+                st.markdown(message['AI'])
+
+        # Process the current user question
         process_user_question(user_question, conversation)
 
+        # Display the latest bot response
         with st.chat_message("assistant"):
             response = conversation(user_question)
             st.markdown(response['response'])
