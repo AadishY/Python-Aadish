@@ -20,14 +20,15 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 models = {
     "Stable Diffusion v1.5": "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5",
     "FLUX.1": "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
-    "Anime Pfp": "https://api-inference.huggingface.co/models/alvdansen/phantasma-anime",
-    "Obama": "https://api-inference.huggingface.co/models/stablediffusionapi/newrealityxl-global-nsfw",
+    "phantasma-anime": "https://api-inference.huggingface.co/models/alvdansen/phantasma-anime",
+    "newrealityxl": "https://api-inference.huggingface.co/models/stablediffusionapi/newrealityxl-global-nsfw",
     "Stable Diffusion 3": "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-3-medium-diffusers",
     "Clandestine XL 1.0": "https://api-inference.huggingface.co/models/yodayo-ai/clandestine-xl-1.0",
     "Animagine XL 3.1": "https://api-inference.huggingface.co/models/cagliostrolab/animagine-xl-3.1",
     "ICantBelieveItSNotPhotography": "https://api-inference.huggingface.co/models/Yntec/ICantBelieveItSNotPhotography",
     "DreamlikePhotoReal2": "https://api-inference.huggingface.co/models/Yntec/DreamlikePhotoReal2",
     "beLIEve": "https://api-inference.huggingface.co/models/Yntec/beLIEve",
+    "Counterfeit-V2.5": "https://api-inference.huggingface.co/models/gsdf/Counterfeit-V2.5",
 }
 
 
