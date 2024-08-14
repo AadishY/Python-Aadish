@@ -13,62 +13,43 @@ st.set_page_config(page_title="Aadish GPT", page_icon="🤖")
 BACKGROUND_IMAGE_URL = "https://cdn.jsdelivr.net/gh/AadishY/Python-Aadish@main/merge.gif"
 
 def initialize_session_state():
-    """
-    Initialize the session state variables if they don't exist.
-    """
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
     if 'model' not in st.session_state:
-        st.session_state.model = 'gemma2-9b-it'  # Default model
+        st.session_state.model = 'gemma2-9b-it'
     if 'conversation' not in st.session_state:
-        st.session_state.conversation = None  # To store the ConversationChain object
+        st.session_state.conversation = None
     if 'groq_chat' not in st.session_state:
-        st.session_state.groq_chat = None  # To store the ChatGroq object
+        st.session_state.groq_chat = None
     if 'last_input' not in st.session_state:
-        st.session_state.last_input = ""  # Track the last input to prevent duplicates
+        st.session_state.last_input = ""
 
 def display_customization_options():
-    """
-    Add customization options to the sidebar for model selection and clear chat option.
-    """
     st.sidebar.title('Customization')
     model = st.sidebar.selectbox(
         'Choose a model',
         ['gemma2-9b-it', 'llama-3.1-8b-instant', 'llama-3.1-70b-versatile', 'mixtral-8x7b-32768'],
-        index=0,  # Set the default selection to 'gemma2-9b-it'
+        index=0,
         key='model_selectbox'
     )
-    
-    # Clear chat option
     if st.sidebar.button("Clear Chat"):
-        st.session_state.clear()  # Clear the entire session state
-        st.experimental_rerun()
-        
+        st.session_state.clear()
+        st.rerun()
     return model
 
 def initialize_groq_chat(groq_api_key, model):
-    """
-    Initialize the Groq Langchain chat object.
-    """
     return ChatGroq(
         groq_api_key=groq_api_key,
         model_name=model
     )
 
 def initialize_conversation(groq_chat, memory):
-    """
-    Initialize the conversation chain with the Groq chat object and memory.
-    """
     return ConversationChain(
         llm=groq_chat,
         memory=memory
     )
 
 def process_user_question(user_question):
-    """
-    Process the user's question and generate a response using the conversation chain.
-    """
-    # Prevent duplicate processing of the same input
     if user_question != st.session_state.last_input:
         conversation = st.session_state.conversation
         response = conversation.run(user_question)
@@ -77,9 +58,6 @@ def process_user_question(user_question):
         st.session_state.last_input = user_question
 
 def main():
-    """
-    The main entry point of the application.
-    """
     groq_api_key = os.environ['GROQ_API_KEY']
 
     initialize_session_state()
@@ -100,32 +78,27 @@ def main():
     st.title("Aadish GPT 🤖")
     st.markdown("Chat with Aadish!")
 
-    # Display customization options and get the selected model
     model = display_customization_options()
 
-    # Check if the model has changed
     if st.session_state.model != model:
         st.session_state.model = model
         st.session_state.groq_chat = initialize_groq_chat(groq_api_key, model)
         st.session_state.conversation = initialize_conversation(st.session_state.groq_chat, ConversationBufferWindowMemory(k=10))
-        st.session_state.chat_history = []  # Clear chat history on model change
-        st.session_state.last_input = ""  # Reset last input
-        st.experimental_rerun()
+        st.session_state.chat_history = []
+        st.session_state.last_input = ""
+        st.rerun()
 
-    # Ensure conversation and groq_chat are initialized
     if st.session_state.conversation is None or st.session_state.groq_chat is None:
         st.session_state.groq_chat = initialize_groq_chat(groq_api_key, st.session_state.model)
         st.session_state.conversation = initialize_conversation(st.session_state.groq_chat, ConversationBufferWindowMemory(k=10))
 
     st.divider()
 
-    # Handle user input
     user_question = st.chat_input("Ask something...")
     if user_question:
         process_user_question(user_question)
-        st.experimental_rerun()  # Refresh to display the new message
+        st.rerun()
 
-    # Display the chat history
     for message in st.session_state.chat_history:
         with st.chat_message("user"):
             st.markdown(message['human'])
