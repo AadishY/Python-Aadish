@@ -20,21 +20,28 @@ def initialize_session_state():
         st.session_state.chat_history = []
     if 'model' not in st.session_state:
         st.session_state.model = 'gemma2-9b-it'  # Default model
+    if 'conversation' not in st.session_state:
+        st.session_state.conversation = None  # To store the ConversationChain object
+    if 'groq_chat' not in st.session_state:
+        st.session_state.groq_chat = None  # To store the ChatGroq object
 
 def display_customization_options():
     """
-    Add customization options to the sidebar for model selection.
+    Add customization options to the sidebar for model selection and clear chat option.
     """
     st.sidebar.title('Customization')
     model = st.sidebar.selectbox(
         'Choose a model',
         ['gemma2-9b-it', 'llama-3.1-8b-instant', 'llama-3.1-70b-versatile', 'mixtral-8x7b-32768'],
+        index=0,  # Set the default selection to 'gemma2-9b-it'
         key='model_selectbox'
     )
     
     # Clear chat option
     if st.sidebar.button("Clear Chat"):
         st.session_state.chat_history = []
+        st.session_state.conversation = None  # Reset conversation chain
+        st.session_state.groq_chat = None  # Reset Groq chat model
         st.experimental_rerun()
         
     return model
@@ -57,18 +64,11 @@ def initialize_conversation(groq_chat, memory):
         memory=memory
     )
 
-def process_user_question(user_question, conversation):
+def process_user_question(user_question):
     """
     Process the user's question and generate a response using the conversation chain.
     """
-    # Add a system role message manually
-    system_message = {
-        "role": "system",
-        "content": "You are AadishGPT, a helpful assistant created by Aadish."
-    }
-
-    # Inject the system message at the beginning
-    conversation.memory.chat_memory.add_user_message(system_message["content"])
+    conversation = st.session_state.conversation
     response = conversation(user_question)
     message = {'human': user_question, 'AI': response['response']}
     st.session_state.chat_history.append(message)
@@ -100,37 +100,36 @@ def main():
     # Display customization options and get the selected model
     model = display_customization_options()
 
-    # Update session state if model changes
+    # Check if model is changed
     if st.session_state.model != model:
-        st.session_state.chat_history = []
         st.session_state.model = model
+        st.session_state.chat_history = []
+        st.session_state.conversation = None  # Reset conversation chain
+        st.session_state.groq_chat = None  # Reset Groq chat model
         st.experimental_rerun()
 
-    # Conversational memory length is now fixed at 10
+    # Conversational memory length is fixed at 10
     memory = ConversationBufferWindowMemory(k=10)
+
+    # Initialize the Groq chat and conversation if not already done
+    if st.session_state.groq_chat is None:
+        st.session_state.groq_chat = initialize_groq_chat(groq_api_key, st.session_state.model)
+        st.session_state.conversation = initialize_conversation(st.session_state.groq_chat, memory)
 
     st.divider()
 
     if user_question := st.chat_input("What is up?"):
         st.session_state.chat_history.append({"human": user_question, "AI": ""})
-        groq_chat = initialize_groq_chat(groq_api_key, st.session_state.model)
-        conversation = initialize_conversation(groq_chat, memory)
+        
+        # Process the current user question
+        process_user_question(user_question)
 
-        # Display previous messages correctly
-        for message in st.session_state.chat_history[:-1]:  # Show all previous messages
+        # Display previous messages and the latest bot response
+        for message in st.session_state.chat_history:
             with st.chat_message("user"):
                 st.markdown(message['human'])
             with st.chat_message("assistant"):
                 st.markdown(message['AI'])
-
-        # Process the current user question
-        process_user_question(user_question, conversation)
-
-        # Display the latest bot response
-        with st.chat_message("assistant"):
-            response = conversation(user_question)
-            st.markdown(response['response'])
-            st.session_state.chat_history[-1]["AI"] = response['response']
 
 if __name__ == "__main__":
     main()
