@@ -24,6 +24,8 @@ def initialize_session_state():
         st.session_state.conversation = None  # To store the ConversationChain object
     if 'groq_chat' not in st.session_state:
         st.session_state.groq_chat = None  # To store the ChatGroq object
+    if 'last_input' not in st.session_state:
+        st.session_state.last_input = ""  # Track the last input to prevent duplicates
 
 def display_customization_options():
     """
@@ -66,10 +68,13 @@ def process_user_question(user_question):
     """
     Process the user's question and generate a response using the conversation chain.
     """
-    conversation = st.session_state.conversation
-    response = conversation.run(user_question)
-    message = {'human': user_question, 'AI': response}
-    st.session_state.chat_history.append(message)
+    # Prevent duplicate processing of the same input
+    if user_question != st.session_state.last_input:
+        conversation = st.session_state.conversation
+        response = conversation.run(user_question)
+        message = {'human': user_question, 'AI': response}
+        st.session_state.chat_history.append(message)
+        st.session_state.last_input = user_question
 
 def main():
     """
@@ -104,6 +109,7 @@ def main():
         st.session_state.groq_chat = initialize_groq_chat(groq_api_key, model)
         st.session_state.conversation = initialize_conversation(st.session_state.groq_chat, ConversationBufferWindowMemory(k=10))
         st.session_state.chat_history = []  # Clear chat history on model change
+        st.session_state.last_input = ""  # Reset last input
         st.experimental_rerun()
 
     # Ensure conversation and groq_chat are initialized
