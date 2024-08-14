@@ -39,16 +39,14 @@ def display_customization_options():
     
     # Clear chat option
     if st.sidebar.button("Clear Chat"):
-        st.session_state.chat_history = []
-        st.session_state.conversation = None  # Reset conversation chain
-        st.session_state.groq_chat = None  # Reset Groq chat model
+        st.session_state.clear()  # Clear the entire session state
         st.experimental_rerun()
         
     return model
 
 def initialize_groq_chat(groq_api_key, model):
     """
-    Initialize the Groq Langchain chat object with a system message.
+    Initialize the Groq Langchain chat object.
     """
     return ChatGroq(
         groq_api_key=groq_api_key,
@@ -69,8 +67,8 @@ def process_user_question(user_question):
     Process the user's question and generate a response using the conversation chain.
     """
     conversation = st.session_state.conversation
-    response = conversation(user_question)
-    message = {'human': user_question, 'AI': response['response']}
+    response = conversation.run(user_question)
+    message = {'human': user_question, 'AI': response}
     st.session_state.chat_history.append(message)
 
 def main():
@@ -100,36 +98,33 @@ def main():
     # Display customization options and get the selected model
     model = display_customization_options()
 
-    # Check if model is changed
+    # Check if the model has changed
     if st.session_state.model != model:
         st.session_state.model = model
-        st.session_state.chat_history = []
-        st.session_state.conversation = None  # Reset conversation chain
-        st.session_state.groq_chat = None  # Reset Groq chat model
+        st.session_state.groq_chat = initialize_groq_chat(groq_api_key, model)
+        st.session_state.conversation = initialize_conversation(st.session_state.groq_chat, ConversationBufferWindowMemory(k=10))
+        st.session_state.chat_history = []  # Clear chat history on model change
         st.experimental_rerun()
 
-    # Conversational memory length is fixed at 10
-    memory = ConversationBufferWindowMemory(k=10)
-
-    # Initialize the Groq chat and conversation if not already done
-    if st.session_state.groq_chat is None:
+    # Ensure conversation and groq_chat are initialized
+    if st.session_state.conversation is None or st.session_state.groq_chat is None:
         st.session_state.groq_chat = initialize_groq_chat(groq_api_key, st.session_state.model)
-        st.session_state.conversation = initialize_conversation(st.session_state.groq_chat, memory)
+        st.session_state.conversation = initialize_conversation(st.session_state.groq_chat, ConversationBufferWindowMemory(k=10))
 
     st.divider()
 
-    if user_question := st.chat_input("What is up?"):
-        st.session_state.chat_history.append({"human": user_question, "AI": ""})
-        
-        # Process the current user question
+    # Handle user input
+    user_question = st.chat_input("Ask something...")
+    if user_question:
         process_user_question(user_question)
+        st.experimental_rerun()  # Refresh to display the new message
 
-        # Display previous messages and the latest bot response
-        for message in st.session_state.chat_history:
-            with st.chat_message("user"):
-                st.markdown(message['human'])
-            with st.chat_message("assistant"):
-                st.markdown(message['AI'])
+    # Display the chat history
+    for message in st.session_state.chat_history:
+        with st.chat_message("user"):
+            st.markdown(message['human'])
+        with st.chat_message("assistant"):
+            st.markdown(message['AI'])
 
 if __name__ == "__main__":
     main()
