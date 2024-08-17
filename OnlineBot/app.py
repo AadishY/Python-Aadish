@@ -15,6 +15,7 @@ BACKGROUND_IMAGE_URL = "https://cdn.jsdelivr.net/gh/AadishY/Python-Aadish@main/m
 hide_st_style = """
             <style>
             #MainMenu {visibility: hidden;}
+            #viewerBadge_link__qRIco {visibility: hidden;}
             footer {visibility: hidden;}
             header {visibility: hidden;}
             </style>
