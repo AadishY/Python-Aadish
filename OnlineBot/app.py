@@ -3,6 +3,7 @@ import streamlit as st
 from langchain.chains import ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
+from langchain.schema import SystemMessage
 import dotenv
 
 dotenv.load_dotenv(dotenv.find_dotenv())
@@ -52,11 +53,17 @@ def initialize_groq_chat(groq_api_key, model):
         model_name=model
     )
 
-def initialize_conversation(groq_chat, memory):
-    return ConversationChain(
+def add_system_prompt_to_memory(memory, system_prompt):
+    memory.chat_memory.add_message(SystemMessage(content=system_prompt))
+
+def initialize_conversation(groq_chat, memory, system_prompt):
+    conversation = ConversationChain(
         llm=groq_chat,
         memory=memory
     )
+    # Add the system message
+    add_system_prompt_to_memory(memory, system_prompt)
+    return conversation
 
 def process_user_question(user_question):
     if user_question != st.session_state.last_input:
@@ -90,17 +97,22 @@ def main():
 
     model = display_customization_options()
 
+    # Define the system prompt
+    system_prompt = "You are made by Aadish. You are a helpful AI assistant designed to provide accurate and helpful responses."
+
     if st.session_state.model != model:
         st.session_state.model = model
         st.session_state.groq_chat = initialize_groq_chat(groq_api_key, model)
-        st.session_state.conversation = initialize_conversation(st.session_state.groq_chat, ConversationBufferWindowMemory(k=10))
+        memory = ConversationBufferWindowMemory(k=10)
+        st.session_state.conversation = initialize_conversation(st.session_state.groq_chat, memory, system_prompt)
         st.session_state.chat_history = []
         st.session_state.last_input = ""
         st.rerun()
 
     if st.session_state.conversation is None or st.session_state.groq_chat is None:
         st.session_state.groq_chat = initialize_groq_chat(groq_api_key, st.session_state.model)
-        st.session_state.conversation = initialize_conversation(st.session_state.groq_chat, ConversationBufferWindowMemory(k=10))
+        memory = ConversationBufferWindowMemory(k=10)
+        st.session_state.conversation = initialize_conversation(st.session_state.groq_chat, memory, system_prompt)
 
     st.divider()
 
