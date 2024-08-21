@@ -5,13 +5,13 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # Copy the requirements file
-COPY OnlineBot/requirements.txt .
+COPY requirements.txt .
 
 # Install the dependencies
 RUN pip install -r requirements.txt
 
 # Copy the rest of the application code
-COPY OnlineBot/ .
+COPY . .
 
 # Expose the port Streamlit is running on
 EXPOSE 8501
