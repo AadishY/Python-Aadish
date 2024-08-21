@@ -13,13 +13,6 @@ st.set_page_config(page_title="Aadish GPT", page_icon="🤖")
 
 BACKGROUND_IMAGE_URL = "https://cdn.jsdelivr.net/gh/AadishY/Python-Aadish@main/merge.gif"
 
-hide_st_style = """
-            <style>
-            #MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
-            header {visibility: hidden;}
-            </style>
-            """
 
 def initialize_session_state():
     if 'chat_history' not in st.session_state:
@@ -76,7 +69,6 @@ def main():
     groq_api_key = os.environ['GROQ_API_KEY']
 
     initialize_session_state()
-    st.markdown(hide_st_style, unsafe_allow_html=True)
 
     st.markdown(
         f"""
