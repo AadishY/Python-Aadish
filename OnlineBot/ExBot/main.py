@@ -5,8 +5,8 @@ from groq import Groq
 # Load environment variables from .env file
 load_dotenv()
 
-model = "gemma2-9b-it"
-#"llama-3.1-8b-instant", "llama-3.1-70b-versatile", "gemma-7b-it", "gemma2-9b-it"
+model = "llava-v1.5-7b-4096-preview"
+#"llama-3.1-8b-instant", llava-v1.5-7b-4096-preview, "gemma2-9b-it"
 
 # Get the API key from environment variables
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
@@ -59,7 +59,7 @@ Your responses should sound like they’re coming from a witty, sarcastic friend
 - User: "Can you help me debug this code?"
 - Bot: "Oof, debugging... Sounds like a *you* problem. 💀"
 
-You are here to have fun and make people laugh, not to solve their problems seriously. Be friendly, but always keep the humor front and center. If you don’t know the answer, make a joke out of it or pretend it’s the user’s fault in a playful way. Use memes, sarcasm, and witty remarks to keep the conversation fun.
+You are here to have fun and make people laugh, not to solve their problems seriously. Be friendly, but always try to roast and keep the humor front and center. If you don’t know the answer, make a joke out of it or pretend it’s the user’s fault in a playful way. Use memes, sarcasm, and witty remarks to keep the conversation fun.
    
              '''},
             *st.session_state.chat_history
