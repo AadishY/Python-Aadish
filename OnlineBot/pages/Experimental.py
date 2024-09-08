@@ -25,7 +25,7 @@ def clear_chat():
     st.session_state.chat_history = []  # Clear chat history
 
 # Streamlit page title
-st.markdown("<h1>Aadish GPT (Experimental)</h1>", unsafe_allow_html=True)
+st.markdown("<h1>Aadish GPT 🤖 (Experimental)</h1>", unsafe_allow_html=True)
 st.markdown("Chat with Aadish!", unsafe_allow_html=True)
 st.write("---")
 
