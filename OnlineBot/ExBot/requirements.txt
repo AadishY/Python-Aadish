@@ -1,4 +1,6 @@
-groq
 streamlit
-dotenv
-os
+langchain
+python-dotenv
+langchain_groq
+requests
+groq
