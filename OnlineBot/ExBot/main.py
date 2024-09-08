@@ -5,8 +5,8 @@ from groq import Groq
 # Load environment variables from .env file
 load_dotenv()
 
-model = "llava-v1.5-7b-4096-preview"
-#"llama-3.1-8b-instant", llava-v1.5-7b-4096-preview, "gemma2-9b-it"
+model = "llama-3.1-8b-instant"
+#"llama-3.1-8b-instant",  "gemma2-9b-it"
 
 # Get the API key from environment variables
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
