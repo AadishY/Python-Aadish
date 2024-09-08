@@ -2,7 +2,6 @@ import os
 from dotenv import load_dotenv
 import streamlit as st
 from groq import Groq
-import random
 # Load environment variables from .env file
 load_dotenv()
 
